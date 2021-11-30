@@ -1,4 +1,4 @@
-# SPINE: Saturated Programmable INsertion Engineering
+ # SPINE: Saturated Programmable INsertion Engineering
 ### Protein domain insertion via programmed oligo libraries
 Python script for generating oligo libraries and PCR primers for programmed domain insertion
 
@@ -10,6 +10,9 @@ numpy
 Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
 Entire plasmid sequence is advised to search for nonspecific amplification <br />
 Final output is fasta format. One file for oligo pools and one file for PCR primers
+
+# Notes:
+Gene primers should be same for the same sequence, because no matter what the mutation types we introduced here the fragmentation strategy should always be the same based on the size of the GOI
 
 # Position arguments
 Gene start is defined as base number of first base in first codon and gene end is defined as base number of last base in last codon.
@@ -24,6 +27,13 @@ python3 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -muta
 
 Deep Mutational Scanning:
 python3 run_spine.py -wDir tests -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
+
+# Qiyao Comment
+Domain Insertion Scanning:
+python3.8 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
+
+Deep Mutational Scanning:
+python3.8 run_spine.py -wDir tests -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
 # Usage
 ```

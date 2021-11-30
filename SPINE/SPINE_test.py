@@ -38,7 +38,7 @@ from difflib import SequenceMatcher
 
 # This allows for individual fasta files or fasta files with multiple genes
 
-
+# this part is correct
 def addgene(genefile, start=[], end=[]):
     if genefile[-1] == ' ':
         genefile = genefile[0:-1]
@@ -58,10 +58,12 @@ def addgene(genefile, start=[], end=[]):
     return tmpOLS  # only return the class object itself if one gene is given
 
 
+# change maxfrag size based on the switch of cutting site from BsmBI to AarI which adds 4 more bp
 class SPINEgene:
     """Synthesized Domain Insertion"""
 
     # Calculate and update maxfrag - Max number of nucleotides that a fragment can carry
+    
     @property
     def synth_len(self):
         return self.__breaksites
@@ -69,7 +71,8 @@ class SPINEgene:
     @synth_len.setter
     def synth_len(self, value):
         self._synth_len = value
-        self.maxfrag = value - 62
+        #self.maxfrag = value - 62 # BsmBI case
+        self.maxfrag = value - 62 - 8 # AarI 7 + 4 random bp   
 
     # Shared variables
     # synth_len = 230  # default
@@ -106,7 +109,8 @@ class SPINEgene:
         try:
             SPINEgene.maxfrag # if SPINEgene.maxfrag doesnt exist, create it
         except AttributeError:
-            SPINEgene.maxfrag = self.synth_len - 62  # based on space for barcodes, cut sites, handle
+            #SPINEgene.maxfrag = self.synth_len - 62  # based on space for barcodes, cut sites, handle
+            SPINEgene.maxfrag = self.synth_len - 62 - 8  # based on space for barcodes, cut sites, handle
         self.geneid = gene.name
         self.linked = set()
         self.genePrimer = []
@@ -166,7 +170,7 @@ class SPINEgene:
                       'His', 'Arg', 'Trp', 'Val', 'Glu', 'Tyr']
 
         # First check for BsaI sites and BsmBI sites
-        if any([gene.seq.upper().count(cut) for cut in ['GGTCTC', 'GAGACC', 'CGTCTC', 'GAGACG']]):
+        if any([gene.seq.upper().count(cut) for cut in ['CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): # need to add AarI
             raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  # change codon
         if start and end and (end - start) % 3 != 0: # scan ORF and avoid fram shift
             print('Gene length is not divisible by 3')
@@ -410,10 +414,12 @@ def align_genevariation(OLS):
 
 
 # this part adds BsmBI site (can change as AarI further)
+# double check the variable change here whether it is compatibal
 def find_geneprimer(genefrag, start, end):
     # start is variable to adjust melting temperature
     # end is fixed with restriction site added
-    primer = genefrag[start:end].complement() + "CTCTGCATA" # added ATA for cleavage close to end of DNA fragment
+    #primer = genefrag[start:end].complement() + "CTCTGCATA" # added ATA for cleavage close to end of DNA fragment
+    primer = genefrag[start:end].complement() + "CGTCCACATA" # AarI, add ATA for cleavage which is adjustable
     # Check melting temperature
     # find complementary sequences
     comp = 0  # compensate for bases that align with bsmbi
@@ -426,14 +432,17 @@ def find_geneprimer(genefrag, start, end):
     while tm2 < SPINEgene.primerTm[0] or tm2 > SPINEgene.primerTm[1] or tm4 < SPINEgene.primerTm[0] or tm4 > SPINEgene.primerTm[1]:
         if tm2 < SPINEgene.primerTm[0] or tm4 < SPINEgene.primerTm[0]:
             start += -1
-            primer = genefrag[start:end].complement() + "CTCTGCATA"  # BsmbI Site addition
+            #primer = genefrag[start:end].complement() + "CTCTGCATA"  # BsmbI Site addition
+            primer = genefrag[start:end].complement() + "CGTCCACATA" 
             tm2 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN2)
             tm4 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN4)
-        if count > 12 or start == 0:  # stop if caught in inf loop or if linker is at max (31 + 7 = 38 bases)
+        # for AarI, max primer size should add 4 more bp    
+        if count > 12 or start == 0:  # stop if caught in inf loop or if linker is at max (for BsmBI 31 + 7 = 38 bases)？？
             break
         if tm2 > SPINEgene.primerTm[1] and tm4 > SPINEgene.primerTm[1]:
             start += 1
-            primer = genefrag[start:end].complement() + "CTCTGCATA"
+            #primer = genefrag[start:end].complement() + "CTCTGCATA"
+            primer = genefrag[start:end].complement() + "CGTCCACATA"
             # tm = mt.Tm_NN(primer[0:e-s+comp],c_seq=genefrag[s:e+comp],nn_table=mt.DNA_NN2)
             tm2 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN2)
             tm4 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN4)
@@ -448,7 +457,8 @@ def find_geneprimer(genefrag, start, end):
 
 
 
-# max primer size = 38
+# max primer size = 38 （31+7 BsmBI）
+# For AarI max primer size  = 31+7+4 
 def find_fragment_primer(fragment, stop):
     start = 0  # starts at maximum length
     if stop > 25:
@@ -794,18 +804,22 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                 gene.barPrimer = []
                 gene.genePrimer = []
             frag = tmpbreaklist[idx]
+            print(frag)
             grouped_oligos = []
             fragstart = str(int((frag[0] - SPINEgene.primerBuffer) / 3) + 1)
             fragend = str(int((frag[1] - SPINEgene.primerBuffer) / 3))
             print('Creating Gene:' + gene.geneid + ' --- Fragment:' + fragstart + '-' + fragend)
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
-                genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer+1-overlap) # 15 is just a starting point
-                genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer+1-overlap)
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
+                genefrag_R = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
+                reverse, tmR, sR = find_geneprimer(genefrag_R, 15, SPINEgene.primerBuffer + 1 + 3 - overlap) # 15 is just a starting point
+                #reverse, tmR, sR = find_geneprimer(genefrag_R, 15, SPINEgene.primerBuffer + 1 - overlap)
+                genefrag_F = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
+                forward, tmF, sF = find_geneprimer(genefrag_F.reverse_complement(), 15, SPINEgene.primerBuffer + 1 + 3  - overlap)
+                #forward, tmF, sF = find_geneprimer(genefrag_F.reverse_complement(), 15, SPINEgene.primerBuffer + 1 - overlap)
+                # add one more offset basepair here to move the sequence switch compatible
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -814,6 +828,7 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                     print("------------------ Fragment size swapped due to non-specific primers ------------------")
                     skip = switch_fragmentsize(gene, idx, OLS)
                     if skip:
+                        print(skip)
                         continue
                     # Quality Control for overhangs from the same gene
                     # check_overhangs(gene, OLS)
@@ -824,6 +839,8 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                     idx = 0
                     continue
                 # Store
+                print('----Genefrag_R-----')
+                print(genefrag_R)
                 gene.genePrimer.append(SeqRecord(reverse, id=gene.geneid + "_geneP_Mut-" + str(idx + 1) + "_R",
                                                  description="Frag" + fragstart + "-" + fragend + ' ' + str(tmR) + 'C'))
                 gene.genePrimer.append(SeqRecord(forward, id=gene.geneid + "_geneP_Mut-" + str(idx + 1) + "_F",
@@ -848,7 +865,7 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                 tmF = 0
                 tmR = 0
                 count = 0
-                tmpseq = gene.seq[frag[0] - 4-overlap : frag[1]+4+overlap].ungap('-') #4 is overhang for BsmBI
+                tmpseq = gene.seq[frag[0] - 4-overlap : frag[1]+4+overlap].ungap('-') #4 is overhang for BsmBI/AarI
                 offset = 4 + overlap
                 tmpsequences = []
                 # Create the mutations
@@ -860,22 +877,25 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                         mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
-                        # Check each cassette for more than 2 BsmBI and 2 BsaI sites
-                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC') > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2:
-                            print('Found BsaI and BsmBI sites')  # change codon
+                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
+                        # Do we need to add 
+                        #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
+                            print('Found BsaI and AarI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
                         tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
 
-                if gene.num_frag_per_oligo > 1:
-                    tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)
+                #if gene.num_frag_per_oligo > 1:
+                    #tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)
 
                 # add on barcodes
                 tmpseq = tmpsequences[0].seq
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7 bases each)
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
+                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -889,12 +909,15 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCC" + tmpseq[0:4]
-                    tmpfrag_2 = tmpseq[-4:] + "GGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
+                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
+                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
-                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction
+                    #offset = int(difference / 2) + 12
+                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
                 group_oligos = []
                 for sequence in tmpsequences:
                     combined_sequence = tmpfrag_1 + sequence.seq[4:-4] + tmpfrag_2
@@ -913,6 +936,8 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
             if gene.doublefrag == 1:
                 all_grouped_oligos.append(grouped_oligos)
             idx += 1
+        
+        
         # Resolve Double Fragment
         if gene.doublefrag == 1:
             while len(all_grouped_oligos) > 1:
@@ -980,6 +1005,7 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
         finishedGenes.extend([ii])
 
 
+"""
 def combine_fragments(tandem, num_frag_per_oligo, split):
     tandem_seq = []
     barcodes = []
@@ -1053,7 +1079,7 @@ def combine_fragments(tandem, num_frag_per_oligo, split):
         tandem_seq.append(SeqRecord(tmpfrag, id=tandem_id, description=''))
         print('Partial sequence' + str(len(tmpfrag)))
     return tandem_seq
-
+"""
 
 def print_all(OLS, folder=''):
     if not isinstance(OLS[0], SPINEgene):
