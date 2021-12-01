@@ -35,6 +35,10 @@ python3.8 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mu
 Deep Mutational Scanning:
 python3.8 run_spine.py -wDir tests -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
+# For single amino acid insertion specificially
+> we need to change the input of end position in the fasta file by adding three more bases.
+> Normally it starts from the first base of ATG and the end position refers to the last base of amino acid right before the stop codon. However, for S_INS function, the stop codon should be considered as the final spot for insertion. 
+
 # Usage
 ```
 optional arguments:

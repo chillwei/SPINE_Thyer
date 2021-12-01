@@ -1183,7 +1183,7 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                 count = 0
                 tmpseq = gene.seq[frag[0] - 4-overlap : frag[1]+4+overlap].ungap('-') #4 is overhang for BsmBI/AarI
                 
-                print('tmpseq' + tmpseq)
+                #print('tmpseq' + tmpseq)
                 
                 
                 offset = 4 + overlap
@@ -1191,7 +1191,7 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                 # Create the mutations
                 for i in range(offset, offset + frag[1] - frag[0], 3):
                     wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
-                    for jk in (x for x in gene.aminoacids if x not in wt[0]):
+                    for jk in (x for x in gene.aminoacids):
                         p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
                         p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
