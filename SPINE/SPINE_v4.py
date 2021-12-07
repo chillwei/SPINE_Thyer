@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Mon Dec  6 22:24:51 2021
+
+@author: weiqiyao
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Tue Nov 23 14:14:25 2021
 
 @author: weiqiyao
@@ -873,32 +881,56 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                 offset = 4 + overlap
                 tmpsequences = []
                 # Create the mutations
-                for i in range(offset, offset + frag[1] - frag[0], 3):
-                    wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
-                    for jk in (x for x in gene.aminoacids if x not in wt[0]):
-                        p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
-                        p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
-                        p = [xp / sum(p) for xp in p]  # Normalize to 1
-                        mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                        xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
+                
+                
+                #############################
+                if idx == len(tmpbreaklist) - 1: 
+                    for i in range(offset, offset + frag[1] - frag[0] - 3, 3):
+                        wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
+                        for jk in (x for x in gene.aminoacids if x not in wt[0]):
+                            p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
+                            p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
+                            p = [xp / sum(p) for xp in p]  # Normalize to 1
+                            mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                            xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                            print('Found BsaI and AarI sites')  # change codon
-                            mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                            xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
-                        tmpsequences.append(SeqRecord(xfrag,
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
+                                print('Found BsaI and AarI sites')  # change codon
+                                mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                                xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
+                            tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
-                        totalcount += 1
+                            totalcount += 1
             
-
+                else:
+                    for i in range(offset, offset + frag[1] - frag[0], 3):
+                        wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
+                        for jk in (x for x in gene.aminoacids if x not in wt[0]):
+                            p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
+                            p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
+                            p = [xp / sum(p) for xp in p]  # Normalize to 1
+                            mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                            xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
+                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
+                        # Do we need to add 
+                        #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
+                                print('Found BsaI and AarI sites')  # change codon
+                                mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                                xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
+                            tmpsequences.append(SeqRecord(xfrag,
+                                                      id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
+                                                      description=''))
+                            totalcount += 1
                 #if gene.num_frag_per_oligo > 1:
                     #tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)
 
                 # add on barcodes
                 tmpseq = tmpsequences[0].seq
+                
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
                     difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
                     #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
@@ -1421,7 +1453,7 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         # missingTable[site][site2] = 0
                 missingFragments.append([(frag[0] - 30) / 3, (frag[1] - 30) / 3, list(missingTmp)])
             if gene.unique_Frag[idx]:  # only for unique sequences
-                # Create gene fragments with insertions
+                
                 tmF = 0
                 tmR = 0
                 count = 0
@@ -1431,9 +1463,12 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                 # Create the single amino acid deletion
                 # Base on previous DMS, swap the mutation site as deletion
                 #for i in range(offset, offset + frag[1] - frag[0], 3):
-                for i in range(offset, offset + frag[1] - frag[0] , 3):    
-                    wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
-                    xfrag = tmpseq[0:i] + tmpseq[i + 3:] # del one amino acid
+                if idx == len(tmpbreaklist) - 1:
+                    for i in range(offset, offset + frag[1] - frag[0] - 3 , 3): 
+                    
+                        wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
+
+                        xfrag = tmpseq[0:i] + tmpseq[i + 3:] # del one amino acid
                     
                     #for jk in (x for x in gene.aminoacids if x not in wt[0]):
                     #    p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
@@ -1445,16 +1480,44 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                    while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
    
-                        print('Found BsaI and AarI sites')  # change codon
+                            print('Found BsaI and AarI sites')  # change codon
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             #xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
-                    xfrag = tmpseq[0:i] + tmpseq[i + 3:]
-                    tmpsequences.append(SeqRecord(xfrag,
+                        xfrag = tmpseq[0:i] + tmpseq[i + 3:]
+                        tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
                                                       description=''))
-                    totalcount += 1
+                        totalcount += 1
+                else: 
+                
+                    for i in range(offset, offset + frag[1] - frag[0] , 3): 
+                        
+                        wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
+
+                        xfrag = tmpseq[0:i] + tmpseq[i + 3:] # del one amino acid
+                    
+                    #for jk in (x for x in gene.aminoacids if x not in wt[0]):
+                    #    p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
+                    #    p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
+                    #    p = [xp / sum(p) for xp in p]  # Normalize to 1
+                        #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                        #xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
+                        
+                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
+                        # Do we need to add 
+                        #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
+   
+                            print('Found BsaI and AarI sites')  # change codon
+                            #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                            #xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
+                        xfrag = tmpseq[0:i] + tmpseq[i + 3:]
+                        tmpsequences.append(SeqRecord(xfrag,
+                                                      id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
+                                                      description=''))
+                        totalcount += 1
 
                 #if gene.num_frag_per_oligo > 1:
                     #tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)

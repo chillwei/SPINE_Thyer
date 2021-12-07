@@ -21,6 +21,11 @@ Gene start is defined as base number of first base in first codon and gene end i
 To define gene position within given fasta file, add start:# end:# to fasta description. (Otherwise use command line prompts) <br />
 '>geneA start:11 end:40'
 
+Note: 
+-> modified SPINE_v4 added new function of S_DEL, S_INS
+-> To make sure even for the S_INS function, the fragmentation strategy does not change, we change the end point as the position of stop codon and exclude the extra mutation of the position of stop codon in DMS and S_DEL function.
+
+
 # Running Test
 Domain Insertion Scanning:
 python3 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS

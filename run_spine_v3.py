@@ -15,7 +15,7 @@ try to add single aa deletion and insertion function
 # script for usage with command line
 
 import argparse
-from SPINE.SPINE_v3 import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments, generate_S_INS_fragments, generate_S_DEL_fragments
+from SPINE.SPINE_v4 import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments, generate_S_INS_fragments, generate_S_DEL_fragments
 
 parser = argparse.ArgumentParser(description="SPINE Saturated Programmable INsertion Engineering")
 parser.add_argument('-wDir', help='Working directory for fasta files and output folder')
