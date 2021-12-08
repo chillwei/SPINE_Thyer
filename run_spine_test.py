@@ -1,8 +1,16 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct 28 15:15:02 2021
+
+@author: weiqiyao
+"""
+
 # RUN SPINE
 # script for usage with command line
 
 import argparse
-from SPINE.SPINE import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments
+from SPINE.SPINE_test import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments
 
 parser = argparse.ArgumentParser(description="SPINE Saturated Programmable INsertion Engineering")
 parser.add_argument('-wDir', help='Working directory for fasta files and output folder')
@@ -23,10 +31,9 @@ parser.add_argument('-usage', default='human', help='Default is "human". Or sele
 
 args = parser.parse_args()
 
-# generate Dir here
 if args.wDir is None:
     if '/' in args.geneFile:
-        args.wDir = args.geneFile.rsplit('/', 1)[0]+'/' #rsplit -- split a string into a list,# setting the maxsplit parameter to 1, will return a list with 2 elements
+        args.wDir = args.geneFile.rsplit('/', 1)[0]+'/'
         args.geneFile = args.geneFile.rsplit('/', 1)[1]
     else:
         args.wDir = ''
@@ -39,7 +46,7 @@ SPINEgene.synth_len = args.oligoLen
 if args.fragmentLen:
     SPINEgene.maxfrag = args.fragmentLen
 else:
-    SPINEgene.maxfrag = args.oligoLen - 62 - args.overlap # 62 allows for cutsites and barcodes
+    SPINEgene.maxfrag = args.oligoLen - 62 - 8- args.overlap # 62 allows for cutsites and barcodes (for AarI 2*(7+4))
 
 #adjust primer primerBuffer
 SPINEgene.primerBuffer += args.overlap
