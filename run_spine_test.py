@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 28 15:15:02 2021
-
-@author: weiqiyao
-"""
-
 # RUN SPINE
 # script for usage with command line
 
@@ -31,9 +23,10 @@ parser.add_argument('-usage', default='human', help='Default is "human". Or sele
 
 args = parser.parse_args()
 
+# generate Dir here
 if args.wDir is None:
     if '/' in args.geneFile:
-        args.wDir = args.geneFile.rsplit('/', 1)[0]+'/'
+        args.wDir = args.geneFile.rsplit('/', 1)[0]+'/' #rsplit -- split a string into a list,# setting the maxsplit parameter to 1, will return a list with 2 elements
         args.geneFile = args.geneFile.rsplit('/', 1)[1]
     else:
         args.wDir = ''
@@ -46,7 +39,7 @@ SPINEgene.synth_len = args.oligoLen
 if args.fragmentLen:
     SPINEgene.maxfrag = args.fragmentLen
 else:
-    SPINEgene.maxfrag = args.oligoLen - 62 - 8- args.overlap # 62 allows for cutsites and barcodes (for AarI 2*(7+4))
+    SPINEgene.maxfrag = args.oligoLen - 62 - args.overlap # 62 allows for cutsites and barcodes
 
 #adjust primer primerBuffer
 SPINEgene.primerBuffer += args.overlap
