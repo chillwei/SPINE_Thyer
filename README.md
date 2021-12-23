@@ -24,7 +24,7 @@ To define gene position within given fasta file, add start:# end:# to fasta desc
 Note: 
 -> modified SPINE_v4 added new function of S_DEL, S_INS
 -> To make sure even for the S_INS function, the fragmentation strategy does not change, we change the end point as the position of stop codon and exclude the extra mutation of the position of stop codon in DMS and S_DEL function.
-
+-> modified SPINE_v5 wrap up every function and add counter to generate diversity of total oligo libaries
 
 # Running Test
 Domain Insertion Scanning:
