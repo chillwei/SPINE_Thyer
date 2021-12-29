@@ -1,1 +1,1 @@
-from SPINE import SPINE_v6
+from SPINE import SPINE_v7
