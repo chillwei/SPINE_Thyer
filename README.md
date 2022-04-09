@@ -27,10 +27,6 @@ Gene start is defined as base number of first base in first codon and gene end i
 To define gene position within given fasta file, add start:# end:# to fasta description. (Otherwise use command line prompts) <br />
 '>geneA start:11 end:40'
 
-# Design of Oligo library and cloning
--> Cloning is based on goldengate assembly by using endonuclease restriction enzyme AarI. Add AarI site in both oligo library and the primers for gene backbone amplification.
--> The length of the oligo is 230 bp including 62 bp for barcodes, cutting sites, buffer sequence for adjustion Tm value.
--> Oligo library has extensive base pair for AarI cutting site which is about 6-10 bp, while for gene backbone amplicon, the extensive base pair for AarI is set as default 3 bp 'ATA' which can be easily adjusted in script.
 
 # Pairs of files for running
 -> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
