@@ -14,8 +14,11 @@ numpy
 
 ## Output:
 -> Final output is fasta format. One file for oligo pools and one file for PCR primers
+
 -> Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. 
+
 -> "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. And it generates all mutation types without the overlap of barcode usage.
+
 -> The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
 
 # Notes:
