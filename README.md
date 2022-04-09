@@ -31,11 +31,17 @@ To define gene position within given fasta file, add start:# end:# to fasta desc
 # Pairs of files for running
 -> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
 	SPINE_v7 contains all of the single amino acid mutation function and also the integrated version for bulk deep mutation scanning
+		
 		DMS: single aa replacement
+		
 		S_INS/S_DEL: single aa insertion / deletion
+		
 		allmut: combination of all single aa mutation types
+		
 		allmut_noCys: exclude introduction of Cysteine from the all mutation types
+	
 	SPINE_v7 also allows for multiple input of GOI sequences in one input file
+	
 	SPINE_v7 carries counter to generate the diversity of final oligo libraries
 
 
