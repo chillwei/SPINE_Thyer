@@ -7,42 +7,58 @@ biopython <br />
 numpy
 
 # Data Formats
-Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
-Entire plasmid sequence is advised to search for nonspecific amplification <br />
-Final output is fasta format. One file for oligo pools and one file for PCR primers
+## Input:
+-> Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
+-> Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification <br />
+-> Multiple sequences can be input for deep mutation scanning in one file.
+
+##Output:
+-> Final output is fasta format. One file for oligo pools and one file for PCR primers
+-> Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
 
 # Notes:
 Gene primers should be same for the same sequence, because no matter what the mutation types we introduced here the fragmentation strategy should always be the same based on the size of the GOI
 
 # Position arguments
-Gene start is defined as base number of first base in first codon and gene end is defined as base number of last base in last codon.
+Gene start is defined as base number of first base in first codon and gene end is defined as base number of last base in last codon which should be the stop codon.
 (Program will subtract 1 from gene start for python numbering)
+
 
 To define gene position within given fasta file, add start:# end:# to fasta description. (Otherwise use command line prompts) <br />
 '>geneA start:11 end:40'
 
-Note: 
--> modified SPINE_v4 added new function of S_DEL, S_INS
--> To make sure even for the S_INS function, the fragmentation strategy does not change, we change the end point as the position of stop codon and exclude the extra mutation of the position of stop codon in DMS and S_DEL function.
--> modified SPINE_v5 wrap up every function and add counter to generate diversity of total oligo libaries
+# Design of Oligo library and cloning
+-> Cloning is based on goldengate assembly by using endonuclease restriction enzyme AarI. Add AarI site in both oligo library and the primers for gene backbone amplification.
+-> The length of the oligo is 230 bp including 62 bp for barcodes, cutting sites, buffer sequence for adjustion Tm value.
+-> Oligo library has extensive base pair for AarI cutting site which is about 6-10 bp, while for gene backbone amplicon, the extensive base pair for AarI is set as default 3 bp 'ATA' which can be easily adjusted in script.
+
+# Pairs of files for running
+-> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
+	SPINE_v7 contains all of the single amino acid mutation function and also the integrated version for bulk deep mutation scanning
+		DMS: single aa replacement
+		S_INS/S_DEL: single aa insertion / deletion
+		allmut: combination of all single aa mutation types
+		allmut_noCys: exclude introduction of Cysteine from the all mutation types
+	SPINE_v7 also allows for multiple input of GOI sequences in one input file
+	SPINE_v7 carries counter to generate the diversity of final oligo libraries
+
+
+-> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
+	Only difference between SPINE_v6 and SPINE_v7 is that SPINE_v7 contains extra function to exclude generating any mutation by introducing Cys.	
+	(CMD:'allmut_noCys')
+	
+
 
 # Running Test
 Domain Insertion Scanning:
-python3 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
+Note: Domain Insertion scanning is directly from the original script. I did not make any changes.
+python3.8 main_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
 
 Deep Mutational Scanning:
-python3 run_spine.py -wDir tests -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
+python3.8 main_spine.py -wDir test_bulk_mut -geneFile Multiple_inputfile.fa -oligoLen 230 -mutationType allmut -usage ecoli
+python3.8 main_spine.py -wDir test_bulk_mut -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
-# Qiyao Comment
-Domain Insertion Scanning:
-python3.8 run_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
 
-Deep Mutational Scanning:
-python3.8 run_spine.py -wDir tests -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
-
-# For single amino acid insertion specificially
-> we need to change the input of end position in the fasta file by adding three more bases.
-> Normally it starts from the first base of ATG and the end position refers to the last base of amino acid right before the stop codon. However, for S_INS function, the stop codon should be considered as the final spot for insertion. 
 
 # Usage
 ```
@@ -65,6 +81,8 @@ optional arguments:
                            overlap. This could help with insertion coverage close to
                            fragment boundary. Overlap does not add additional
                            insertions and thus no additional oligos.
--mutationType              Run deep insertion scan "DIS" or deep mutation scan "DMS"
+-mutationType              Run deep insertion scan "DIS", deep mutation scan for single amino acid replacement "DMS", single amino acid deletion "S_DEL", 
+			  single amino acid insertion "S_INS" or combine all single amino acid mutation together(replacement, deletion, insertion) "allmut".
+			  Or exclude any introduction of 'Cys' into the mutation library "allmut_noCys" 
 -usage USAGE               Default is "human". Or select "ecoli"
 ```
