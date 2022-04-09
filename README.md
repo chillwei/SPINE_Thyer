@@ -39,11 +39,6 @@ To define gene position within given fasta file, add start:# end:# to fasta desc
 	SPINE_v7 carries counter to generate the diversity of final oligo libraries
 
 
--> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
-	Only difference between SPINE_v6 and SPINE_v7 is that SPINE_v7 contains extra function to exclude generating any mutation by introducing Cys.	
-	(CMD:'allmut_noCys')
-	
-
 
 # Running Test
 Domain Insertion Scanning:
