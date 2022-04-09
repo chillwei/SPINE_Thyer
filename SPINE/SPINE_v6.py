@@ -35,8 +35,10 @@ Use align_genevariation()
 """
 
 """
-This version is modified by QIYAO switching BsmBI to AarI
-And also add two more functions for single amino acid insertion and deletion
+ This version is modified by QIYAO switching BsmBI to AarI
+-> And also add two more functions for single amino acid insertion and deletion
+-> allmut function wraps up all of the mutation type
+
 """
 
 from Bio import SeqIO
