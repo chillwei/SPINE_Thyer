@@ -35,7 +35,7 @@ Use align_genevariation()
 """
 
 """
- This version is modified by QIYAO switching BsmBI to AarI
+ This version is modified by QIYAO switching BsmBI to BsaI
 -> And also add two more functions for single amino acid insertion and deletion
 -> allmut function wraps up all of the mutation type
 -> Same tiling with same amplification tag
@@ -94,8 +94,8 @@ class SPINEgene:
     @synth_len.setter
     def synth_len(self, value):
         self._synth_len = value
-        #self.maxfrag = value - 62 # BsmBI case
-        self.maxfrag = value - 62 - 8 # AarI 7 + 4 random bp   
+        #self.maxfrag = value - 62 # BsmBI 
+        self.maxfrag = value - 62 # BsaI. which is similar as BsmBI
 
     # Shared variables
     # synth_len = 230  # default
@@ -133,7 +133,7 @@ class SPINEgene:
             SPINEgene.maxfrag # if SPINEgene.maxfrag doesnt exist, create it
         except AttributeError:
             #SPINEgene.maxfrag = self.synth_len - 62  # based on space for barcodes, cut sites, handle
-            SPINEgene.maxfrag = self.synth_len - 62 - 8  # based on space for barcodes, cut sites, handle
+            SPINEgene.maxfrag = self.synth_len - 62  
         self.geneid = gene.name
         self.linked = set()
         self.genePrimer = []
@@ -436,13 +436,12 @@ def align_genevariation(OLS):
             'No redundant sequences found. Matching sequences may be too short or not aligned to reduce number of oligos synthesized')
 
 
-# this part adds BsmBI site (can change as AarI further)
+# this part adds BsmBI site into primers (The original design has been changed as BsaI further)
 # double check the variable change here whether it is compatibal
 def find_geneprimer(genefrag, start, end):
     # start is variable to adjust melting temperature
     # end is fixed with restriction site added
-    #primer = genefrag[start:end].complement() + "CTCTGCATA" # added ATA for cleavage close to end of DNA fragment
-    primer = genefrag[start:end].complement() + "CGTCCACATA" # AarI, add ATA for cleavage which is adjustable
+    primer = genefrag[start:end].complement() + "CTCTGGATA" # added ATA for cleavage close to end of DNA fragment
     # Check melting temperature
     # find complementary sequences
     comp = 0  # compensate for bases that align with bsmbi
@@ -455,8 +454,7 @@ def find_geneprimer(genefrag, start, end):
     while tm2 < SPINEgene.primerTm[0] or tm2 > SPINEgene.primerTm[1] or tm4 < SPINEgene.primerTm[0] or tm4 > SPINEgene.primerTm[1]:
         if tm2 < SPINEgene.primerTm[0] or tm4 < SPINEgene.primerTm[0]:
             start += -1
-            #primer = genefrag[start:end].complement() + "CTCTGCATA"  # BsmbI Site addition
-            primer = genefrag[start:end].complement() + "CGTCCACATA" 
+            primer = genefrag[start:end].complement() + "CTCTGGATA"  # BsmbI Site addition
             tm2 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN2)
             tm4 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN4)
         # for AarI, max primer size should add 4 more bp    
@@ -464,8 +462,7 @@ def find_geneprimer(genefrag, start, end):
             break
         if tm2 > SPINEgene.primerTm[1] and tm4 > SPINEgene.primerTm[1]:
             start += 1
-            #primer = genefrag[start:end].complement() + "CTCTGCATA"
-            primer = genefrag[start:end].complement() + "CGTCCACATA"
+            primer = genefrag[start:end].complement() + "CTCTGGATA"
             # tm = mt.Tm_NN(primer[0:e-s+comp],c_seq=genefrag[s:e+comp],nn_table=mt.DNA_NN2)
             tm2 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN2)
             tm4 = mt.Tm_NN(primer[0:end - start + comp], nn_table=mt.DNA_NN4)
@@ -671,6 +668,7 @@ def check_overhangs(gene, OLS, overlap):
             break
 
 
+# DIS is used to insert an entire domain. We don't need this function in DMS.
 def generate_DIS_fragments(OLS, overlap, folder=''):
     if not isinstance(OLS[0], SPINEgene):
         raise TypeError('Not an instance of the SPINEgene class')
@@ -834,12 +832,12 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
                 genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 + 3-overlap) # 15 is just a starting point
+                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 -overlap) # 15 is just a starting point
                 genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 + 3-overlap)
+                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 - overlap)
                 # add one more offset basepair here to move the sequence switch compatible
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -902,11 +900,10 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                             p = [xp / sum(p) for xp in p]  # Normalize to 1
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
-                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
-                        # Do we need to add 
+                        # Check each cassette for more than 2 BsaI and 2 BsmBI sites 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC') > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2:
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
                             tmpsequences.append(SeqRecord(xfrag,
@@ -929,8 +926,8 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC') > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2:
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
                             tmpsequences.append(SeqRecord(xfrag,
@@ -944,8 +941,8 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                 tmpseq = tmpsequences[0].seq
                 
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
-                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7 bases each)
+                    
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -959,15 +956,14 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
-                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
-                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "GGTCTCC" + tmpseq[0:4] 
+                    tmpfrag_2 = tmpseq[-4:] + "GGAGACC" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
-                    #offset = int(difference / 2) + 12
-                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
+                    
+                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction 
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
                 group_oligos = []
                 for sequence in tmpsequences:
                     combined_sequence = tmpfrag_1 + sequence.seq[4:-4] + tmpfrag_2
@@ -1176,12 +1172,12 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
                 genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 + 3-overlap) # 15 is just a starting point
+                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1-overlap) # 15 is just a starting point
                 genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 +3 -overlap)
+                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 -overlap)
                 # add one more offset basepair here to move the sequence switch compatible
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -1243,9 +1239,8 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                         xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i :]  # Add insertion to fragment
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
-                        #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                            print('Found BsaI and AarI sites')  # change codon
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                            print('Found BsaI and BsmBI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag = tmpseq[0:i] + mutation + tmpseq[i :]
                         tmpsequences.append(SeqRecord(xfrag,
@@ -1259,8 +1254,7 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                 # add on barcodes
                 tmpseq = tmpsequences[0].seq
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
-                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -1274,15 +1268,13 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
-                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
-                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "GGTCTCC" + tmpseq[0:4] 
+                    tmpfrag_2 = tmpseq[-4:] + "GGAGACC" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
-                    #offset = int(difference / 2) + 12
-                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
+
+                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
                 group_oligos = []
                 for sequence in tmpsequences:
                     combined_sequence = tmpfrag_1 + sequence.seq[4:-4] + tmpfrag_2
@@ -1418,12 +1410,12 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
                 genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 + 3 - overlap) # 15 is just a starting point
+                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 - overlap) # 15 is just a starting point
                 genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 + 3 - overlap)
+                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 - overlap)
                 # add one more offset basepair here to move the sequence switch compatible 
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -1496,9 +1488,8 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-   
-                            print('Found BsaI and AarI sites')  # change codon
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC') > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2:
+                            print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
                             #xfrag = tmpseq[0:i] + substitution + tmpseq[i + 6:]
@@ -1530,9 +1521,8 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             
-                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-   
-                            print('Found BsaI and AarI sites')  # change codon
+                        while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC') > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2:
+                            print('Found BsaI and BsmBI sites')  # change codon
                             
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
@@ -1549,8 +1539,7 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                 # add on barcodes
                 tmpseq = tmpsequences[0].seq
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
-                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -1564,15 +1553,12 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
-                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
-                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "GGTCTCC" + tmpseq[0:4] 
+                    tmpfrag_2 = tmpseq[-4:] + "GGAGACC" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
-                    #offset = int(difference / 2) + 12
-                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
+                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
                 group_oligos = []
                 for sequence in tmpsequences:
                     combined_sequence = tmpfrag_1 + sequence.seq[4:-4] + tmpfrag_2
@@ -1706,12 +1692,12 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
                 genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 + 3-overlap) # 15 is just a starting point
+                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 -overlap) # 15 is just a starting point
                 genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 + 3-overlap)
+                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1-overlap)
                 # add one more offset basepair here to move the sequence switch compatible
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -1766,7 +1752,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                 ###################################################
                 # combine single aa rpl,  del and ins together
                 ###################################################
-                
+               
                 for i in range(offset, offset + frag[1] - frag[0], 3):
                     wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
                     for jk in (x for x in gene.aminoacids):
@@ -1777,10 +1763,9 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         xfrag_ins = tmpseq[0:i] + mutation[0] + tmpseq[i :]  # Add insertion to fragment
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
-                        # Do we need to add 
-                        #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CACCTGC') + xfrag_ins.upper().count('GCAGGTG') > 2 :
-                            print('Found BsaI and AarI sites')  # change codon
+                       
+                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 :
+                            print('Found BsaI and BsmBI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag_ins = tmpseq[0:i] + mutation + tmpseq[i :]
                         tmpsequences_ins.append(SeqRecord(xfrag_ins,
@@ -1800,12 +1785,12 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CACCTGC') + xfrag_del.upper().count('GCAGGTG') > 2 :
+                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
    
-                            print('Found BsaI and AarI sites')  # change codon
+                            print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
-                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
+                            #xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
                         
                         tmpsequences_del.append(SeqRecord(xfrag_del,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
@@ -1814,7 +1799,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                     
                         totalcount_Del += 1                        
 
-                        
+
                         for jk in (x for x in gene.aminoacids if x not in wt[0]):
                             p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
                             p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
@@ -1830,8 +1815,8 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
                             
                             # For DMS
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation +  tmpseq[i + 3:]
@@ -1841,7 +1826,6 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                             totalcount_DMS += 1
                             
 
-            
                 else:
                     for i in range(offset, offset + frag[1] - frag[0], 3):
                         
@@ -1854,19 +1838,19 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CACCTGC') + xfrag_del.upper().count('GCAGGTG') > 2 :
+                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
    
-                            print('Found BsaI and AarI sites')  # change codon
+                            print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
-                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
+                            #xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
                         
                     
                         tmpsequences_del.append(SeqRecord(xfrag_del,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
                                                       description=''))
                         totalcount_Del += 1                      
-                        
+      
                        
                         for jk in (x for x in gene.aminoacids if x not in wt[0]):
                             p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
@@ -1877,15 +1861,15 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
                             tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
                             totalcount_DMS += 1
-                            
+
                             
                             # For Del
 
@@ -1896,8 +1880,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                 tmpseq = tmpsequences_ins[0].seq
                 
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
-                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -1911,15 +1894,13 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
-                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
-                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "GGTCTCC" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
+                    tmpfrag_2 = tmpseq[-4:] +'GGAGACC' + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
-                    #offset = int(difference / 2) + 12
-                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
+
+                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
                 group_oligos = []
                 # for DMS
                 for sequence in tmpsequences:
@@ -2074,12 +2055,12 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
             if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
                 # Primers for gene amplification with addition of BsmBI site
                 genefrag = gene.seq[frag[0]-SPINEgene.primerBuffer : frag[0]+SPINEgene.primerBuffer]
-                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 + 3-overlap) # 15 is just a starting point
+                reverse, tmR, sR = find_geneprimer(genefrag, 15, SPINEgene.primerBuffer + 1 -overlap) # 15 is just a starting point
                 genefrag = gene.seq[frag[1]-SPINEgene.primerBuffer: frag[1]+SPINEgene.primerBuffer]
-                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1 + 3-overlap)
+                forward, tmF, sF = find_geneprimer(genefrag.reverse_complement(), 15, SPINEgene.primerBuffer + 1-overlap)
                 # add one more offset basepair here to move the sequence switch compatible
-                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 14 - overlap) # negative numbers look for reverse primers
-                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 14 + overlap)
+                tmpr = check_nonspecific(reverse, gene.seq, frag[0] - len(gene.seq) + 10 - overlap) # negative numbers look for reverse primers
+                tmpf = check_nonspecific(forward, gene.seq, frag[1] - 10 + overlap)
                 if tmpf or tmpr:
                     # swap size with another fragment
                     if tmpf:
@@ -2145,11 +2126,11 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                         mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         xfrag_ins = tmpseq[0:i] + mutation[0] + tmpseq[i :]  # Add insertion to fragment
-                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
-                        # Do we need to add 
+                        # Check each cassette for more than 2 BsaI and 2 AarI sites                         
+                        # Do we need to add                         
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CACCTGC') + xfrag_ins.upper().count('GCAGGTG') > 2 :
-                            print('Found BsaI and AarI sites')  # change codon
+                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 :
+                            print('Found BsaI and BsmBI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag_ins = tmpseq[0:i] + mutation + tmpseq[i :]
                         tmpsequences_ins.append(SeqRecord(xfrag_ins,
@@ -2169,9 +2150,9 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CACCTGC') + xfrag_del.upper().count('GCAGGTG') > 2 :
+                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
    
-                            print('Found BsaI and AarI sites')  # change codon
+                            print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
                             xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
@@ -2201,8 +2182,8 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
                             
                             # For DMS
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation +  tmpseq[i + 3:]
@@ -2225,9 +2206,9 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CACCTGC') + xfrag_del.upper().count('GCAGGTG') > 2 :
+                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
    
-                            print('Found BsaI and AarI sites')  # change codon
+                            print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
                             xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
@@ -2250,8 +2231,8 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CACCTGC') + xfrag.upper().count('GCAGGTG') > 2 :
-                                print('Found BsaI and AarI sites')  # change codon
+                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                                print('Found BsaI and BsmBI sites')  # change codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
                             tmpsequences.append(SeqRecord(xfrag,
@@ -2269,8 +2250,8 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                 tmpseq = tmpsequences_ins[0].seq
                 
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
-                    difference = (SPINEgene.synth_len - (len(tmpseq) + 22))  # 22 bases is the length of the restriction sites with overhangs (7+4 bases each)
-                    #difference = (SPINEgene.synth_len - (len(tmpseq) + 16))
+                    difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
+                
                     barF = SPINEgene.barcodeF.pop(0)
                     barR = SPINEgene.barcodeR.pop(0)
                     count += 1  # How many barcodes used
@@ -2284,15 +2265,14 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         barF += tmpF
                         barR += tmpR
                         count += 1  # How many barcodes used
-                    #tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CGTCTCCT" + tmpseq[0:4] 
-                    #tmpfrag_2 = tmpseq[-4:] + "AGGAGACG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
-                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "CACCTGCATAT" + tmpseq[0:4] #ATAT is used as random 4bp cleavage  buffer
-                    tmpfrag_2 = tmpseq[-4:] + "ATATGCAGGTG" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
+                
+                    tmpfrag_1 = barF.seq[0:int(difference / 2)] + "GGTCTCC" + tmpseq[0:4] 
+                    tmpfrag_2 = tmpseq[-4:] + "GGAGACC" + barR.seq.reverse_complement()[0:difference - int(difference / 2)]
                     # primers for amplifying subpools
                     #offset = int(difference / 2) + 12
-                    offset = int(difference / 2) + 15  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
+                    offset = int(difference / 2) + 11  # add 11 bases for type 2 restriction (change for AarI 7+4+4)
                     primerF, tmF = find_fragment_primer(tmpfrag_1, offset)
-                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 30))
+                    primerR, tmR = find_fragment_primer(tmpfrag_2.reverse_complement(), (difference - offset + 22))
                 group_oligos = []
                 # for DMS
                 for sequence in tmpsequences:
