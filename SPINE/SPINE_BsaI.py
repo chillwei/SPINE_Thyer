@@ -1790,7 +1790,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                             print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
-                            #xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
+                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
                         
                         tmpsequences_del.append(SeqRecord(xfrag_del,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
@@ -1843,7 +1843,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                             print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
                             
-                            #xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
+                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
                         
                     
                         tmpsequences_del.append(SeqRecord(xfrag_del,
