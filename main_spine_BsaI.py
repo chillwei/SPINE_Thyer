@@ -10,7 +10,9 @@ Created on Wed Dec 29 16:59:28 2021
 # -*- coding: utf-8 -*-
 """
 The file is modified from main_spine and use different module to run DMS. The only difference is switch the TypeII enzyme from AarI to BsaI 
+
 And the length of the oligo pools have been shrinked to 150 bp.
+
 """
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -48,7 +50,9 @@ if args.wDir is None:
     else:
         args.wDir = ''
 
+
 if any([x not in ['A', 'C', 'G', 'T', 'a', 'c', 'g', 't','N'] for x in args.handle]):
+
     raise ValueError('Genetic handle contains non nucleic bases')
 
 SPINEgene.handle = args.handle

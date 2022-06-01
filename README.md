@@ -12,9 +12,14 @@ numpy
 -> Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification <br />
 -> Multiple sequences can be input for deep mutation scanning in one file.
 
-##Output:
+## Output:
 -> Final output is fasta format. One file for oligo pools and one file for PCR primers
--> Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
+
+-> Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. 
+
+-> "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. And it generates all mutation types without the overlap of barcode usage.
+
+-> The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
 
 # Notes:
 Gene primers should be same for the same sequence, because no matter what the mutation types we introduced here the fragmentation strategy should always be the same based on the size of the GOI
@@ -31,28 +36,32 @@ To define gene position within given fasta file, add start:# end:# to fasta desc
 # Pairs of files for running
 -> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
 	SPINE_v7 contains all of the single amino acid mutation function and also the integrated version for bulk deep mutation scanning
-		DMS: single aa replacement
-		S_INS/S_DEL: single aa insertion / deletion
-		allmut: combination of all single aa mutation types
-		allmut_noCys: exclude introduction of Cysteine from the all mutation types
-	SPINE_v7 also allows for multiple input of GOI sequences in one input file
-	SPINE_v7 carries counter to generate the diversity of final oligo libraries
-
-
--> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
-	Only difference between SPINE_v6 and SPINE_v7 is that SPINE_v7 contains extra function to exclude generating any mutation by introducing Cys.	
-	(CMD:'allmut_noCys')
+		
+DMS: single aa replacement
+		
+S_INS/S_DEL: single aa insertion / deletion
+		
+allmut: combination of all single aa mutation types
+		
+allmut_noCys: exclude introduction of Cysteine from the all mutation types
 	
+-> SPINE_v7 also allows for multiple input of GOI sequences in one input file
+	
+-> SPINE_v7 carries counter to generate the diversity of final oligo libraries
+
 
 
 # Running Test
 Domain Insertion Scanning:
 Note: Domain Insertion scanning is directly from the original script. I did not make any changes.
-python3.8 main_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
+
+	python3.8 main_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
 
 Deep Mutational Scanning:
-python3.8 main_spine.py -wDir test_bulk_mut -geneFile Multiple_inputfile.fa -oligoLen 230 -mutationType allmut -usage ecoli
-python3.8 main_spine.py -wDir test_bulk_mut -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
+
+	python3.8 main_spine.py -wDir test_bulk_mut -geneFile Multiple_inputfile.fa -oligoLen 230 -mutationType allmut -usage ecoli
+
+	python3.8 main_spine.py -wDir test_bulk_mut -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
 
 

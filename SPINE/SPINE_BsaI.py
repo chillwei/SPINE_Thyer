@@ -1005,7 +1005,9 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                         sequence = listTwo.pop(0)
                     combined_id = sequence.id
                     combined_sequence = sequence.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1020,7 +1022,9 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
                     sequence_one = one.pop(0)
                     combined_id = sequence_one.id
                     combined_sequence = sequence_one.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1316,7 +1320,9 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                         sequence = listTwo.pop(0)
                     combined_id = sequence.id
                     combined_sequence = sequence.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1331,7 +1337,9 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
                     sequence_one = one.pop(0)
                     combined_id = sequence_one.id
                     combined_sequence = sequence_one.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1603,7 +1611,9 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         sequence = listTwo.pop(0)
                     combined_id = sequence.id
                     combined_sequence = sequence.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1618,7 +1628,9 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                     sequence_one = one.pop(0)
                     combined_id = sequence_one.id
                     combined_sequence = sequence_one.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1752,7 +1764,8 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                 ###################################################
                 # combine single aa rpl,  del and ins together
                 ###################################################
-               
+
+
                 for i in range(offset, offset + frag[1] - frag[0], 3):
                     wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
                     for jk in (x for x in gene.aminoacids):
@@ -1826,6 +1839,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                             totalcount_DMS += 1
                             
 
+
                 else:
                     for i in range(offset, offset + frag[1] - frag[0], 3):
                         
@@ -1850,7 +1864,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
                                                       description=''))
                         totalcount_Del += 1                      
-      
+
                        
                         for jk in (x for x in gene.aminoacids if x not in wt[0]):
                             p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
@@ -1877,7 +1891,9 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                     #tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)
 
                 # add on barcodes
+
                 tmpseq = tmpsequences_ins[0].seq
+
                 
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
                     difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
@@ -1966,7 +1982,9 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         sequence = listTwo.pop(0)
                     combined_id = sequence.id
                     combined_sequence = sequence.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -1981,7 +1999,9 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                     sequence_one = one.pop(0)
                     combined_id = sequence_one.id
                     combined_sequence = sequence_one.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -2247,7 +2267,9 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                     #tmpsequences = combine_fragments(tmpsequences, gene.num_frag_per_oligo, gene.split)
 
                 # add on barcodes
+
                 tmpseq = tmpsequences_ins[0].seq
+
                 
                 while tmF < SPINEgene.primerTm[0] or tmR < SPINEgene.primerTm[0]:  # swap out barcode if tm is low
                     difference = (SPINEgene.synth_len - (len(tmpseq) + 14))  # 14 bases is the length of the restriction sites with overhangs (7+4 bases each)
@@ -2338,7 +2360,9 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         sequence = listTwo.pop(0)
                     combined_id = sequence.id
                     combined_sequence = sequence.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
@@ -2353,7 +2377,9 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                     sequence_one = one.pop(0)
                     combined_id = sequence_one.id
                     combined_sequence = sequence_one.seq
+
                     difference = SPINEgene.synth_len - len(combined_sequence)
+
                     # print(len(tmpseq))
                     barF2 = SPINEgene.barcodeF.pop(0)
                     barR2 = SPINEgene.barcodeR.pop(0)
