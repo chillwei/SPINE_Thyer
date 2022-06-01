@@ -19,6 +19,8 @@ numpy
 
 -> "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. And it generates all mutation types without the overlap of barcode usage.
 
+-> Note: "allmut" and "allmut_noCys" functions generate different length of oligos, because all of the mutation types require to fit into same frame. Based on insertion, deletion and replacement, the length of oligo varies. 
+
 -> The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
 
 # Notes:
