@@ -53,6 +53,7 @@ import os
 from math import ceil
 import itertools
 from difflib import SequenceMatcher
+import re
 # from Bio import AlignIO
 # from Bio.Align.Applications import MafftCommandline
 
@@ -1754,6 +1755,7 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                 tmR = 0
                 count = 0
                 tmpseq = gene.seq[frag[0] - 4-overlap : frag[1]+4+overlap].ungap('-') #4 is overhang for BsmBI/AarI
+                tmpseq = tmpseq.upper()
                 offset = 4 + overlap
                 tmpsequences = []
                 tmpsequences_del = []
@@ -1768,19 +1770,57 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
 
                 for i in range(offset, offset + frag[1] - frag[0], 3):
                     wt = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i:i + 3].upper() in codon]
-                    for jk in (x for x in gene.aminoacids):
+                    #subs = [name for name, codon in gene.SynonymousCodons.items() if tmpseq[i + 3:i + 6].upper() in codon]
 
+                    for jk in (x for x in gene.aminoacids):
+                       # print(jk)
                         p = [gene.usage[aa] for aa in gene.SynonymousCodons[jk]]  # Find probabilities
                         p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
-                        p = [xp / sum(p) for xp in p]  # Normalize to 1
+                        p = [xp / sum(p) for xp in p]  # Normalize 1    
+                        
                         mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                        
+                        #for t in range(0,len(mutation)+1):
                         xfrag_ins = tmpseq[0:i] + mutation[0] + tmpseq[i :]  # Add insertion to fragment
-                        # Check each cassette for more than 2 BsaI and 2 AarI sites 
-                       
-                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 :
-                            print('Found BsaI and BsmBI sites')  # change codon
+                            #if (xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2) | (xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 ):
+                             #   break
+                        
+                        # Check each cassette for more than 2 BsaI and 2 AarI sites
+                        counter_aa = 0
+                        while  len(re.findall('(GGTCTC|GAGACC)',str(xfrag_ins.upper()))) > 0 :
+                        
+                        #xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  != 2 :
+                        #while (xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2) | (xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 ):
+                            #print('Found BsaI and BsmBI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                            xfrag_ins = tmpseq[0:i] + mutation + tmpseq[i :]
+                            
+                            
+                            xfrag_ins = tmpseq[0:i] + mutation[0]+ tmpseq[i:]
+                            
+                            counter_aa+= 1
+                            if counter_aa > 5:
+                                if 'GGTCTC' in mutation[0] + tmpseq[i:]  or 'GAGACC' in mutation[0] + tmpseq[i:]:
+                                    for key in gene.SynonymousCodons.keys():
+                                        if tmpseq[i:i+3] in gene.SynonymousCodons[key]:
+                                            for aa in gene.SynonymousCodons[key]:
+                                                if aa != tmpseq[i:i+3]:
+                                                    mut_after = aa
+                                                    xfrag_ins = tmpseq[0:i] + mutation[0]+ mut_after + tmpseq[i+3:]
+                                                    break
+                                            break   
+                                else :
+                                    for key in gene.SynonymousCodons.keys():
+                                        if tmpseq[i-3:i] in gene.SynonymousCodons[key]:
+                                            for aa in gene.SynonymousCodons[key]:
+                                                if aa != tmpseq[i-3:i]:
+                                                    mut_before = aa
+                                                    xfrag_ins = tmpseq[0:i-3] + mut_before + mutation[0] + tmpseq[i:]
+                                                    break
+                                            break
+                            if counter_aa > 10:
+                                print(xfrag_ins)
+                                break
+
                         tmpsequences_ins.append(SeqRecord(xfrag_ins,
                                                       id=gene.geneid + "_Ins" + fragstart + "-" + fragend + "_" + 'INS' + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
@@ -1798,12 +1838,30 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
-   
-                            print('Found BsaI and BsmBI sites')  # change codon
-                            substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
+                        counter_aa = 0
+                        while  len(re.findall('(GGTCTC|GAGACC)',str(xfrag_del.upper()))) > 0 :
                             
-                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
+                            counter_aa+= 1
+                            for key in gene.SynonymousCodons.keys():
+                                if tmpseq[i-3:i] in gene.SynonymousCodons[key]:
+                                    for aa in gene.SynonymousCodons[key]:
+                                        if aa != tmpseq[i-3:i]:
+                                            mut_before = aa
+                                            xfrag_del = tmpseq[0:i-3] + mut_before + tmpseq[i+3:]
+                                            break
+                                    break
+                            if counter_aa > 5:
+                                for key in gene.SynonymousCodons.keys():
+                                    if tmpseq[i+3:i+6] in gene.SynonymousCodons[key]:
+                                        for aa in gene.SynonymousCodons[key]:
+                                            if aa != tmpseq[i+3:i+6]:
+                                                mut_after = aa
+                                                xfrag_del = tmpseq[0:i] + mut_after + tmpseq[i+6:]
+                                                break
+                                        break
+                            if counter_aa > 10:
+                                print(xfrag_del)
+                                break                       
                         
                         tmpsequences_del.append(SeqRecord(xfrag_del,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
@@ -1822,17 +1880,55 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                             xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]  # Add mutation to fragment
                             # single aa ins
                             
+                            counter_aa = 0
+                            while  len(re.findall('(GGTCTC|GAGACC)',str(xfrag.upper()))) > 0 :
+                        
+                        
+                                mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                                xfrag = tmpseq[0:i] + mutation[0]+ tmpseq[i + 3:]
+                            
+                                counter_aa+= 1
+                                if counter_aa > 5:
+                                    if 'GGTCTC' in mutation[0] + tmpseq[i +3:]  or 'GAGACC' in mutation[0] + tmpseq[i +3:]:
+                                        for key in gene.SynonymousCodons.keys():
+                                            if tmpseq[i+3:i+6] in gene.SynonymousCodons[key]:
+                                                for aa in gene.SynonymousCodons[key]:
+                                                    if aa != tmpseq[i+3:i+6]:
+                                                        mut_after = aa
+                                                        if i + 6 >= 89:
+                                                            xfrag = tmpseq[0:i] + mutation[0]+ mut_after
+                                                        else:
+                                                            xfrag = tmpseq[0:i] + mutation[0]+ mut_after + tmpseq[i+6:]
+                                                        break
+                                                break   
+                                    else :
+                                        for key in gene.SynonymousCodons.keys():
+                                            if tmpseq[i-3:i] in gene.SynonymousCodons[key]:
+                                                for aa in gene.SynonymousCodons[key]:
+                                                    if aa != tmpseq[i-3:i]:
+                                                        mut_before = aa
+                                                        xfrag = tmpseq[0:i-3] + mut_before + mutation[0] + tmpseq[i+3:]
+                                                        break
+                                                break
+                                if counter_aa > 10:
+                                    print(xfrag)
+                                    break
+                            #    xfrag = tmpseq[0:i] + mutation[0]+ mut_after + tmpseq[i+6:]
+                        
+
                             
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
                             
                             # For DMS
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                                print('Found BsaI and BsmBI sites')  # change codon
+                           # while (xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2) | (xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 ):
+                           #     print('Found BsaI and BsmBI sites')  # change codon
                                 #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                                mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                                xfrag = tmpseq[0:i] + mutation +  tmpseq[i + 3:]
+                           #     substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
+                        
+ #                               mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+ #                               xfrag = tmpseq[0:i] + mutation[0] +  tmpseq[i + 3:]
                             tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
@@ -1851,14 +1947,30 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         p = [xp if xp > 0.1 else 0 for xp in p]  # Remove probabilities below 0.1
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                        
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
-   
-                            print('Found BsaI and BsmBI sites')  # change codon
-                            substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
+                        counter_aa = 0
+                        while  len(re.findall('(GGTCTC|GAGACC)',str(xfrag_del.upper()))) > 0 :
                             
-                            xfrag_del = tmpseq[0:i] + substitution + tmpseq[i + 6:]
-                        
+                            counter_aa+= 1
+                            for key in gene.SynonymousCodons.keys():
+                                if tmpseq[i-3:i] in gene.SynonymousCodons[key]:
+                                    for aa in gene.SynonymousCodons[key]:
+                                        if aa != tmpseq[i-3:i]:
+                                            mut_before = aa
+                                            xfrag_del = tmpseq[0:i-3] + mut_before + tmpseq[i+3:]
+                                            break
+                                    break  
+                            if counter_aa > 5:
+                                for key in gene.SynonymousCodons.keys():
+                                    if tmpseq[i+3:i+6] in gene.SynonymousCodons[key]:
+                                        for aa in gene.SynonymousCodons[key]:
+                                            if aa != tmpseq[i+3:i+6]:
+                                                mut_after = aa
+                                                xfrag_del = tmpseq[0:i] + mut_after + tmpseq[i+6:]
+                                                break
+                                        break 
+                            if counter_aa > 10:
+                                print(xfrag_del)
+                                break                        
                     
                         tmpsequences_del.append(SeqRecord(xfrag_del,
                                                       id=gene.geneid + "_Del" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + 'null',
@@ -1875,10 +1987,44 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                                print('Found BsaI and BsmBI sites')  # change codon
+                            counter_aa = 0
+                            while  len(re.findall('(GGTCTC|GAGACC)',str(xfrag.upper()))) > 0 :
+
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
-                                xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
+                                xfrag = tmpseq[0:i] + mutation[0]+ tmpseq[i + 3:]
+                                
+                                counter_aa+= 1
+                                if counter_aa > 5:
+                                    if 'GGTCTC' in mutation[0] + tmpseq[i +3:]  or 'GAGACC' in mutation[0] + tmpseq[i +3:]:
+                                        for key in gene.SynonymousCodons.keys():
+                                            if tmpseq[i+3:i+6] in gene.SynonymousCodons[key]:
+                                                for aa in gene.SynonymousCodons[key]:
+                                                    if aa != tmpseq[i+3:i+6]:
+                                                        mut_after = aa
+                                                        if i + 6 >= 89:
+                                                            xfrag = tmpseq[0:i] + mutation[0]+ mut_after
+                                                        else:
+                                                            xfrag = tmpseq[0:i] + mutation[0]+ mut_after + tmpseq[i+6:]
+                                                        break
+                                                break   
+                                    else :
+                                        for key in gene.SynonymousCodons.keys():
+                                            if tmpseq[i-3:i] in gene.SynonymousCodons[key]:
+                                                for aa in gene.SynonymousCodons[key]:
+                                                    if aa != tmpseq[i-3:i]:
+                                                        mut_before = aa
+                                                        xfrag = tmpseq[0:i-3] + mut_before + mutation[0] + tmpseq[i+3:]
+                                                        break
+                                                break
+                                if counter_aa > 10:
+                                    print(xfrag)
+                                    break                            
+                            
+                            #while (xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 )| (xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 ):
+                             #   print('Found BsaI and BsmBI sites')  # change codon
+                             #   mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
+                             #   xfrag = tmpseq[0:i] + mutation[0] + tmpseq[i + 3:]
+                                
                             tmpsequences.append(SeqRecord(xfrag,
                                                       id=gene.geneid + "_Mut" + fragstart + "-" + fragend + "_" + wt[0] + str(int((frag[0] + i + 3 - offset - SPINEgene.primerBuffer) / 3)) + jk,
                                                       description=''))
@@ -2149,7 +2295,7 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites                         
                         # Do we need to add                         
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                        while xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2 | xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2 :
+                        while (xfrag_ins.upper().count('GGTCTC') + xfrag_ins.upper().count('GAGACC')  > 2) | (xfrag_ins.upper().count('CGTCTC') + xfrag_ins.upper().count('GAGACG') > 2) :
                             print('Found BsaI and BsmBI sites')  # change codon
                             mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                             xfrag_ins = tmpseq[0:i] + mutation + tmpseq[i :]
@@ -2170,7 +2316,7 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
+                        while (xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 )| (xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 ):
    
                             print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
@@ -2202,7 +2348,7 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
                             
                             # For DMS
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                            while (xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2) | (xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2) :
                                 print('Found BsaI and BsmBI sites')  # change codon
                                 #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
@@ -2226,7 +2372,7 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         p = [xp / sum(p) for xp in p]  # Normalize to 1
                             #mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                         
-                        while xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 | xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 :
+                        while (xfrag_del.upper().count('GGTCTC') + xfrag_del.upper().count('GAGACC')  > 2 )|( xfrag_del.upper().count('CGTCTC') + xfrag_del.upper().count('GAGACG') > 2 ):
    
                             print('Found BsaI and BsmBI sites')  # change codon
                             substitution = np.random.choice(gene.SynonymousCodons[subs[0]], 1, p)  # Pick one codon
@@ -2251,7 +2397,7 @@ def generate_allmut_noCys_fragments(OLS, overlap, folder=''):
                         # Check each cassette for more than 2 BsaI and 2 AarI sites 
                         # Do we need to add 
                         #while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
-                            while xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 | xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 :
+                            while (xfrag.upper().count('GGTCTC') + xfrag.upper().count('GAGACC')  > 2 )| (xfrag.upper().count('CGTCTC') + xfrag.upper().count('GAGACG') > 2 ):
                                 print('Found BsaI and BsmBI sites')  # change codon
                                 mutation = np.random.choice(gene.SynonymousCodons[jk], 1, p)  # Pick one codon
                                 xfrag = tmpseq[0:i] + mutation + tmpseq[i + 3:]
