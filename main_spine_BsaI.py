@@ -22,7 +22,7 @@ And the length of the oligo pools have been shrinked to 150 bp.
 # script for usage with command line
 
 import argparse
-from SPINE.SPINE_BsaI import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments, generate_S_INS_fragments, generate_S_DEL_fragments, generate_allmut_fragments, generate_allmut_noCys_fragments
+from SPINE.SPINE_BsaI import align_genevariation, generate_DIS_fragments, print_all, post_qc, addgene, SPINEgene, generate_DMS_fragments, generate_S_INS_fragments, generate_S_DEL_fragments, generate_allmut_fragments
 
 parser = argparse.ArgumentParser(description="SPINE Saturated Programmable INsertion Engineering")
 parser.add_argument('-wDir', help='Working directory for fasta files and output folder')
@@ -36,7 +36,7 @@ parser.add_argument('-mutationType',
                     default='DMS',
                     const='DMS',
                     nargs='?',
-                    choices=['DIS', 'DMS','S_INS','S_DEL','allmut','allmut_noCys'],
+                    choices=['DIS', 'DMS','S_INS','S_DEL','allmut'],
                     help='Choose if you will run deep insertion scan, deep mutation scan, single amino acid insertion, deletion or bulk mutation')
 parser.add_argument('-usage', default='human', help='Default is "human". Or select "ecoli"')
 #parser.add_argument('-restrictionSeq', default=['GGTCTC', 'CGTCTC', 'GCTCTTC'])  # BsaI, BsmBI, SapI
@@ -89,8 +89,7 @@ elif args.mutationType == 'S_INS':
     generate_S_INS_fragments(OLS, args.overlap, args.wDir)
 elif args.mutationType == 'allmut':
     generate_allmut_fragments(OLS, args.overlap, args.wDir)
-elif args.mutationType == 'allmut_noCys':
-    generate_allmut_noCys_fragments(OLS, args.overlap, args.wDir)
+
 
 post_qc(OLS)
 print_all(OLS, args.wDir)
