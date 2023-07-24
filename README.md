@@ -9,7 +9,9 @@ numpy
 # Data Formats
 ## Input:
 -> Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
+
 -> Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification <br />
+
 -> Multiple sequences can be input for deep mutation scanning in one file.
 
 ## Output:
