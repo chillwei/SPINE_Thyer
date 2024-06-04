@@ -39,9 +39,9 @@ tzdata==2024.1
 	
 	2.  If the BsmBI site locates in the backbone of plasmid, user can choose to fragmentize the plasmid sequence that contain the BsmBI site. Using linear fragment of the partial plasmid works as long as the gene context of at least 100 bp upstream and downstream of the target gene is included.
 	
-	3.  For benefit of running DMS on multiple sequences in fasta file,  adjusting the following line in the code of functional module is recommended. Here I take file 'SPINE_BsaI.py' as an example.
+	3.  For the benefit of running DMS on multiple sequences in the fasta file,  adjusting the following line in the code of functional module is recommended. Here I take file 'SPINE_BsaI.py' as an example.
 	
-- remove BsmBI site in line 189-190
+###remove BsmBI site in line 189-190
 
 SPINE_BsaI.py code line 189-190 :
 
