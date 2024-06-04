@@ -112,7 +112,10 @@ In version1, main file  'main_spine.py' is paired with functional module 'SPINE_
 	
 - SPINE_v7 carries counter to generate the diversity of final oligo libraries
 
-- Fasta_converter.ipynb is used to convert fasta file to csv file. And it contains a function to deduplicate the oligos by identifying BsaI as token and extract oligo sequence translating it into amino acid. The final deduplicating will be run based on the repeat of amino acid sequence. The duplicate is caused by insertion and deletion. (e.g. amino acid: NDK. Inserting D at the second and third position are the same -- NDDK. For deletion, if there are continuous same amino acids, such as NDDK, deletion of the second or the third amino acid generates same result )
+- 'Fasta_converter.ipynb' file locates in the diretory of 'tests' folder. Fasta_converter.ipynb is used to convert fasta file to csv file. It contains a function to deduplicate the oligos by identifying BsaI as token and extract oligo sequence translating it into amino acid. The final deduplicating will be run based on the repeat of amino acid sequence. The duplicate is caused by insertion and deletion. (e.g. amino acid: NDK. Inserting D at the second and third position are the same -- NDDK. For deletion, if there are continuous same amino acids, such as NDDK, deletion of the second or the third amino acid generates same result )
+
+	This deduplicating function is integrated into the functional module of SPINE version2 (main_spine_BsaI.py), so no more separate deduplicating is needed using version 2. When using version 1, deduplicating checkpoint is required. (Coder's comments: if necessary, I will fix it later.)
+ 
 
 ### Running test for version1
  'oligoLen' can be customized based on the ordering requirement for oligo length. e.g. 230 bp or 150 bp
