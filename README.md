@@ -76,7 +76,7 @@ Note: Domain Insertion scanning is directly from the original script. I did not 
 
 Deep Mutational Scanning:
 
-	python3.8 main_spine.py -wDir test_bulk_mut -geneFile Multiple_inputfile.fa -oligoLen 230 -mutationType allmut -usage ecoli
+	python3.8 main_spine.py -wDir test_bulk_mut -geneFile test.fa -oligoLen 230 -mutationType allmut -usage ecoli
 
 	python3.8 main_spine.py -wDir test_bulk_mut -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
