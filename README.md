@@ -32,14 +32,14 @@ tzdata==2024.1
 	For version1, eliminate AarI site
 	For version2, eliminate BsaI site
 
--  Notes: user might get error report returned if the sequence in the fasta file contains BsmBI. The elimination of BsmBI restriction enzyme site  is case specific to Thyer lab's benefit because BsmBI enzyme is part of the lab modular cloning pipeline. 
+-  Notes: user might get an error report returned if the sequence in the fasta file contains BsmBI. The elimination of BsmBI restriction enzyme site  is case specific to Thyer lab's benefit because BsmBI enzyme is part of the lab modular cloning pipeline. 
 
-	For user's benefit, here are three solutions to avoid this problems.
+	For the user's benefit, here are three solutions to avoid these problems.
 	1.  Domesticate the BsmBI site in the sequence by switching it as synonymous codon if the BsmBI site locates within the target gene.
 	
-	2.  If the BsmBI site locates in the backbone of plasmid, user can choose to fragmentize the plasmid sequence that contain the BsmBI site. Using linear fragment of the partial plasmid works as long as the gene context of at least 100 bp upstream and downstream of the target gene is included.
+	2.  If the BsmBI site is located in the backbone of plasmid, users can choose to fragmentize the plasmid sequence that contain the BsmBI site. Using a linear fragment of the partial plasmid works as long as the gene context of at least 100 bp upstream and downstream of the target gene is included.
 	
-	3.  For the benefit of running DMS on multiple sequences in the fasta file,  adjusting the following line in the code of functional module is recommended. Here I take file 'SPINE_BsaI.py' as an example.
+	3.  For the benefit of running DMS on multiple sequences in the fasta file,  adjusting the following line in the code of functional module is recommended. Here I take the file 'SPINE_BsaI.py' as an example.
 	
 ### Eliminate error report of BsmBI site
 
