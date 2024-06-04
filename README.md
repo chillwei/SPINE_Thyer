@@ -24,7 +24,7 @@ tzdata==2024.1
 ## Input:
 - Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
 
--  Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification. Using linear fragment of the partial plasmid works as long as the gene context of at least 100 bp upstream and downstream of the target gene is included. <br />
+-  Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification. Using linear fragment of the partial plasmid works as long as the gene context of about 100 bp upstream and downstream of the target gene is included. <br />
 
 -  Multiple sequences can be input for deep mutation scanning in one file.
 
