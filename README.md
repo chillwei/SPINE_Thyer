@@ -5,27 +5,71 @@ The mutation type for DMS library can be customized based on the personal needs 
 The oligo library design is meant to be compatible for Golden gate assembly using BsaI.
 
 # Python Dependencies
-biopython <br />
-numpy
+biopython==1.78
+
+numpy==1.26.4
+
+pandas==2.2.1
+
+python-dateutil==2.9.0.post0
+
+pytz==2024.1
+
+six==1.16.0
+
+tzdata==2024.1
+
 
 # Data Formats
 ## Input:
--> Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
+- Targeted genes must be in fasta format and include a minimum of 30 bases surrounding gene.
 
--> Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification <br />
+-  Entire plasmid sequence with all the essential genetic context is advised to search for nonspecific amplification. Using linear fragment of the partial plasmid works as long as the gene context of about 100 bp upstream and downstream of the target gene is included. <br />
 
--> Multiple sequences can be input for deep mutation scanning in one file.
+-  Multiple sequences can be input for deep mutation scanning in one file.
+
+-  Make sure there is no AarI or BsaI restriction enzyme site in the sequence that you included in the fasta, based on what version of SPINE tool you are going to use. 
+	For version1, eliminate AarI site
+	For version2, eliminate BsaI site
+
+-  Notes: user might get error report returned if the sequence in the fasta file contains BsmBI. The elimination of BsmBI restriction enzyme site  is case specific to Thyer lab's benefit because BsmBI enzyme is part of the lab modular cloning pipeline. 
+
+	For user's benefit, here are three solutions to avoid this problems.
+	1.  Domesticate the BsmBI site in the sequence by switching it as synonymous codon if the BsmBI site locates within the target gene.
+	
+	2.  If the BsmBI site locates in the backbone of plasmid, user can choose to fragmentize the plasmid sequence that contain the BsmBI site. Using linear fragment of the partial plasmid works as long as the gene context of at least 100 bp upstream and downstream of the target gene is included.
+	
+	3.  For the benefit of running DMS on multiple sequences in the fasta file,  adjusting the following line in the code of functional module is recommended. Here I take file 'SPINE_BsaI.py' as an example.
+	
+### Eliminate error report of BsmBI site
+
+SPINE_BsaI.py code line 189-190 :
+
+	if any([gene.seq.upper().count(cut) for cut in ['CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): 
+		raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  
+		
+After site removal in line 189-190 :
+
+	if any([gene.seq.upper().count(cut) for cut in [ 'CACCTGC', 'GCAGGTG']]): 
+		raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  
+
+Delete SPINE_BsaI.py code line 764-765 :  
+ 
+	if (xfrag.upper()[offset:len(tmpseq)+offset].count('CGTCTC') + xfrag.upper()[offset:len(tmpseq)+offset].count('GAGACG')) > 2:
+          	raise ValueError('BsmBI site found within insertion fragment')          
+
+
 
 ## Output:
--> Final output is fasta format. One file for oligo pools and one file for PCR primers
+- Final output is fasta format. One file for oligo pools and one file for PCR primers
 
--> Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. 
+- Different mutation type function can be run separately. The barcode might be overlapped if the functions are run separately. 
 
--> "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. And it generates all mutation types without the overlap of barcode usage.
+-  "allmut" function wrapped up everything and generate oligo libraries based on the same fragmentation strategy of the GOI. And it generates all mutation types without the overlap of barcode usage.
 
--> Note: "allmut" and "allmut_noCys" functions generate different length of oligos, because all of the mutation types require to fit into same frame. Based on insertion, deletion and replacement, the length of oligo varies. 
+-  Note: "allmut" and "allmut_noCys" functions generate different length of oligos, because all of the mutation types require to fit into same frame. Based on insertion, deletion and replacement, the length of oligo varies. 
 
--> The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
+- The primers for both of the oligo libraries or plasmid vector within the same fragmentation part are generic.
 
 # Notes:
 Gene primers should be same for the same sequence, because no matter what the mutation types we introduced here the fragmentation strategy should always be the same based on the size of the GOI
@@ -47,39 +91,65 @@ To define gene position within given fasta file, add start:# end:# to fasta desc
 '>geneA start:11 end:40'
 
 
-# Pairs of files for running
--> Final version for running DMS: 'main_spine.py' with functional module 'SPINE_v7.py' 
-	SPINE_v7 contains all of the single amino acid mutation function and also the integrated version for bulk deep mutation scanning
+# SPINE versions
+There are two versions of SPINE tool generated for different need of DMS library construction based on either using AarI restriction enzyme for assembly or BsaI.
+
+## Version1 AarI:
+- Version1 generates DMS oligo fragment with AarI type II restriction enzyme for further cloning.
+
+In version1, main file  'main_spine.py' is paired with functional module 'SPINE_v7.py' 
+- SPINE_v7 contains all of the single amino acid mutation function and also the integrated version for bulk deep mutation scanning
 		
-DMS: single aa replacement
+	DMS: single aa replacement
 		
-S_INS/S_DEL: single aa insertion / deletion
+	S_INS/S_DEL: single aa insertion / deletion
 		
-allmut: combination of all single aa mutation types
+	allmut: combination of all single aa mutation types
 		
-allmut_noCys: exclude introduction of Cysteine from the all mutation types
+	allmut_noCys: exclude introduction of Cysteine from the all mutation types
 	
--> SPINE_v7 also allows for multiple input of GOI sequences in one input file
+- SPINE_v7 also allows for multiple input of GOI sequences in one input file
 	
--> SPINE_v7 carries counter to generate the diversity of final oligo libraries
+- SPINE_v7 carries counter to generate the diversity of final oligo libraries
 
--> SPINE_BsaI is modified to generate DMS library with type II site BsaI. And it has been troubleshooted to fix the problem of introducing extra BsaI site after DMS.
+- 'Fasta_converter.ipynb' file locates in the diretory of 'tests' folder. It requires Juypter notebook to run the code. Fasta_converter.ipynb is used to convert fasta file to csv file. It contains a function to deduplicate the oligos by identifying BsaI as token and extract oligo sequence translating it into amino acid. The final deduplicating will be run based on the repeat of amino acid sequence. The duplicate is caused by insertion and deletion. (e.g. amino acid: NDK. Inserting D at the second and third position are the same -- NDDK. For deletion, if there are continuous same amino acids, such as NDDK, deletion of the second or the third amino acid generates same result )
 
--> Fasta_converter.ipynb is used to convert fasta file to csv file. And it contains a function to deduplicate the oligos by identifying BsaI as token and extract oligo sequence translating it into amino acid. The final deduplicating will be run based on the repeat of amino acid sequence. The duplicate is caused by insertion and deletion. (e.g. amino acid: NDK. Inserting D at the second and third position are the same -- NDDK. For deletion, if there are continuous same amino acids, such as NDDK, deletion of the second or the third amino acid generates same result )
+	This deduplicating function is integrated into the functional module of SPINE version2 (main_spine_BsaI.py), so no more separate deduplicating is needed using version 2. When using version 1, deduplicating checkpoint is required. (Coder's comments: if necessary, I will fix it later.)
+ 
+- 'Fa_to_csv_oligoP.ipynb' file locates in the diretory of 'tests' folder.It requires Juypter notebook to run the code. The directory of oligo.fa or primer.fa needs to be changed based on user's directory or file name. This function helps to convert fasta file to csv file which makes the ordering of sequence easier.
 
+  
+### Running test for version1
+ 'oligoLen' can be customized based on the ordering requirement for oligo length. e.g. 230 bp or 150 bp
 
-# Running Test
 Domain Insertion Scanning:
-Note: Domain Insertion scanning is directly from the original script. I did not make any changes.
+Note: Domain Insertion scanning is directly from the original script. I did not make any changes to that.
 
-	python3.8 main_spine.py -wDir tests -geneFile combined_fasta.fa -oligoLen 230 -mutationType DIS
+	python3.8 main_spine.py -wDir tests -geneFile test.fa -oligoLen 230 -mutationType DIS
 
 Deep Mutational Scanning:
 
-	python3.8 main_spine.py -wDir test_bulk_mut -geneFile test.fa -oligoLen 230 -mutationType allmut -usage ecoli
+	python3.8 main_spine.py -wDir tests -geneFile test.fa -oligoLen 230 -mutationType allmut -usage ecoli
 
-	python3.8 main_spine.py -wDir test_bulk_mut -geneFile Kir.fa -oligoLen 230 -mutationType DMS -usage ecoli
+	python3.8 main_spine.py -wDir tests -geneFile test.fa -oligoLen 230 -mutationType DMS -usage ecoli
 
+
+
+## Version2 BsaI:
+- Version2 generates DMS oligo fragment with BsaI type II restriction enzyme for further cloning.
+
+In version2, main file  'main_spine_BsaI.py' is paired with functional module 'SPINE_BsaI.py' 
+- SPINE_BsaI is modified to generate DMS library with type II site BsaI. It has been troubleshooted to fix the problem of introducing extra BsaI site into the oligo pool after the oligo generation from DMS.
+- Other features of version2 is similar as version1.
+
+### Running test for version2
+ 'oligoLen' can be customized based on the ordering requirement for oligo length. e.g. 230 bp or 150 bp
+
+
+Deep Mutational Scanning:
+
+	python3.8 main_spine_BsaI.py -wDir tests -geneFile test.fa -oligoLen 150 -mutationType allmut -usage ecoli | tee output.txt 
+ 
 
 
 # Usage
