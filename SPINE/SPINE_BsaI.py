@@ -557,7 +557,7 @@ def check_nonspecific(primer, fragment, point):
     return sum(non)
 
 
-def switch_fragmentsize(gene, detectedsite, OLS):
+def switch_fragmentsize(gene, detectedsite, OLS, overlap):
     if not isinstance(gene, SPINEgene):
         raise TypeError('Not an instance of the SPINEgene class')
     start = gene.start
@@ -635,32 +635,71 @@ def switch_fragmentsize(gene, detectedsite, OLS):
         OLS[tmp].breaksites = gene.breaksites
         OLS[tmp].fragsize = gene.fragsize
         OLS[tmp].breaklist = gene.breaklist
+    #print('brklist2',gene.breaklist)
+    
+    #gene.breaklist[0][0] += 3  # Do not mutate first codon
+    #gene.fragsize[0] += -3  # Readjust size to match breaklist
+    tmpbreaklist_After = [[x[0] , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+         
+    overhang_AFTER = []
+    for idx, y in enumerate(tmpbreaklist_After):
+        #print(y)
+        overhang_AFTER.append([gene.seq[y[0] - 4 - overlap: y[0] - overlap ], idx])  # Forward overhang
+        overhang_AFTER.append([gene.seq[y[1] + overlap : y[1] + 4 + overlap ], idx])  # Reverse overhang
+    print('New overhangs after fragmentation shift: ',overhang_AFTER) 
+    
+#    for i in range(0,len(overhang_AFTER),2): 
+#        if overhang_AFTER[i][0] == overhang_AFTER[i+1][0]: 
+#                 # figure out the position of amino acid need to be mutated as synonumous codon.
+#            print('Find repeated overhang in one fragment!')
+#        else:
+#            print('No repeated overhang is found after swapping fragmentation sites!')
     return skip
 
 
 def check_overhangs(gene, OLS, overlap):
     # Force all overhangs to be different within a gene (no more than 2 matching in a row)
+    #print('OLS',OLS)
     if not isinstance(gene, SPINEgene):
         raise TypeError('Not an instance of the SPINEgene class')
+    #print(gene.seq)
+    # troubleshooting shift of 5' prime overhang
+    tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
     while True:
         overhang = []
-        for idx, y in enumerate(gene.breaklist):
+        print('Initial fragmentation:',tmpbreaklist)
+        for idx, y in enumerate(tmpbreaklist):
             overhang.append([gene.seq[y[0] - 4 - overlap : y[0] - overlap], idx])  # Forward overhang
-            overhang.append([gene.seq[y[1] + overlap : y[1] + 4 + overlap], idx + 1])  # Reverse overhang
+            overhang.append([gene.seq[y[1] + overlap : y[1] + 4 + overlap], idx])  # Reverse overhang
+        print('Overhangs of initial fragmentation:',overhang)
+        # check if the 5' and 3' overhang are matching, if so need to swap the synonomous codon for either of overhang.
         detectedsites = set()  # stores matching overhangs
-        for i in range(len(overhang)):  # check each overhang for matches
-            for j in [x for x in range(len(overhang)) if x != i]:  # permutate over every overhang combination to find matches
-                if overhang[i][0] == overhang[j][0] or overhang[i][0][:3] == overhang[j][0][:3] or overhang[i][0][1:] == overhang[j][0][1:]:  # no 3 matching sequences
-                    detectedsites.update([overhang[i][1]])
+
+        for i in range(0,len(overhang),2): 
+            # identify if there is identical overhang in one fragment as well as reverse complement
+            if overhang[i][0] == overhang[i+1][0] or overhang[i][0] == overhang[i+1][0].reverse_complement() or  overhang[i][0][:3] == overhang[i+1][0][:3] or overhang[i][0][1:] == overhang[i+1][0][1:]:  # no 3 matching sequences: #overhang in one fragment cannot be the same sequence and reverse complement 
+                # figure out the position of amino acid need to be mutated as synonumous codon.
+                print('Find repeated / identical overhang in one fragment!')
+                #matchoverhang_startloc = tmpbreaklist[i][1] # the start position of matched overhang in one fragment at 3'
+            
+                #aa_loc = (tmpbreaklist[i][1] - SPINEgene.primerBuffer)/3 + 1
+                #print ('Find same overhang in oligo fragment:', i+1, 'amino acid position:', aa_loc)
+                detectedsites.update([overhang[i][1]])
+        print('detectedsites: ',detectedsites)
         for detectedsite in detectedsites:
             if detectedsite == 0:
-                detectedsite = 1
+               detectedsite = 1
             print("------------------ Fragment size swapped due to matching overhangs ------------------")
-            skip = switch_fragmentsize(gene, detectedsite, OLS)
+            skip = switch_fragmentsize(gene, detectedsite, OLS,overlap)
+            print(skip)
+
+
         else:
             break
 
 
+
+         
 # DIS is used to insert an entire domain. We don't need this function in DMS.
 def generate_DIS_fragments(OLS, overlap, folder=''):
     if not isinstance(OLS[0], SPINEgene):
@@ -797,10 +836,14 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
-        tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
             check_overhangs(gene, OLS, overlap)
+        
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+        tmpbreaklist[0][0] += 3
+        print('final tmp brklist',tmpbreaklist)
+        
         # Generate oligos and Primers
         idx = 0 # index for fragment
         totalcount = 0
@@ -1115,7 +1158,6 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
 
 def generate_S_INS_fragments(OLS, overlap, folder=''):
     
-   # copy from DMS
     if not isinstance(OLS[0], SPINEgene):
         raise TypeError('Not an instance of the SPINEgene class')
     # Loop through each gene or gene variation
@@ -1124,10 +1166,13 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
-        tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
             check_overhangs(gene, OLS, overlap)
+            
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+        tmpbreaklist[0][0] += 3
+        print('final tmp brklist',tmpbreaklist)
         # Generate oligos and Primers
         idx = 0 # index for fragment
         totalcount = 0
@@ -1401,11 +1446,15 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
-        tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+        
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
             check_overhangs(gene, OLS, overlap)
+      
         # Generate oligos and Primers
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+        tmpbreaklist[0][0] += 3
+        print('final tmp brklist',tmpbreaklist)
         idx = 0 # index for fragment
         totalcount = 0
         #storage for unused barcodes
@@ -1441,7 +1490,7 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
                         idx = idx + 1
                     # swap size with another fragment
                     print("------------------ Fragment size swapped due to non-specific primers ------------------")
-                    skip = switch_fragmentsize(gene, idx, OLS)
+                    skip = switch_fragmentsize(gene, idx, OLS,overlap)
                     if skip:
                         print(skip)
                         continue
@@ -1699,10 +1748,13 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
-        tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
             check_overhangs(gene, OLS, overlap)
+            
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+        tmpbreaklist[0][0] += 3
+        print('final tmp brklist',tmpbreaklist)
         # Generate oligos and Primers
         idx = 0 # index for fragment
         totalcount = 0
