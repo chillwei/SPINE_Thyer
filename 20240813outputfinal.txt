@@ -1,0 +1,197 @@
+Initial Fragment Sizes for:SelA
+[87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87]
+Initial Fragment Sizes for:SelD
+[87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87]
+--------------------------------- Analyzing Gene:SelA ---------------------------------
+Initial fragmentation: [[33, 117], [117, 204], [204, 291], [291, 378], [378, 465], [465, 552], [552, 639], [639, 726], [726, 813], [813, 900], [900, 987], [987, 1074], [1074, 1161], [1161, 1248], [1248, 1335], [1335, 1422]]
+Overhangs of initial fragmentation: [[Seq('TATG'), 0], [Seq('ACCT'), 0], [Seq('TGAC'), 1], [Seq('GCTT'), 1], [Seq('GCCG'), 2], [Seq('GGCA'), 2], [Seq('GACC'), 3], [Seq('ACCC'), 3], [Seq('GGTT'), 4], [Seq('GATG'), 4], [Seq('GGAA'), 5], [Seq('GGCG'), 5], [Seq('TCGC'), 6], [Seq('AACC'), 6], [Seq('TACC'), 7], [Seq('CAGG'), 7], [Seq('CATC'), 8], [Seq('GGcA'), 8], [Seq('TTCT'), 9], [Seq('TTCT'), 9], [Seq('GAGC'), 10], [Seq('CTGA'), 10], [Seq('CCCT'), 11], [Seq('GAAA'), 11], [Seq('GTCC'), 12], [Seq('CATT'), 12], [Seq('TGCT'), 13], [Seq('GCCG'), 13], [Seq('GAGC'), 14], [Seq('ATTG'), 14], [Seq('GGTA'), 15], [Seq('TCCt'), 15]]
+Find repeated / identical overhang in one fragment!
+detectedsites:  {9}
+------------------ Fragment size swapped due to matching overhangs ------------------
+Non specific Fragment:9
+[87, 87, 87, 90, 87, 87, 87, 87, 87, 84, 87, 87, 87, 87, 87, 87]
+New overhangs after fragmentation shift:  [[Seq('TATG'), 0], [Seq('ACCT'), 0], [Seq('CACC'), 1], [Seq('GCTT'), 1], [Seq('GGCT'), 2], [Seq('GGCA'), 2], [Seq('CGGC'), 3], [Seq('CTGG'), 3], [Seq('CCTG'), 4], [Seq('GCGT'), 4], [Seq('TGCG'), 5], [Seq('GAAC'), 5], [Seq('CGAA'), 6], [Seq('CGTA'), 6], [Seq('CCGT'), 7], [Seq('GGCT'), 7], [Seq('GGGC'), 8], [Seq('AGCC'), 8], [Seq('cAGC'), 9], [Seq('TTCT'), 9], [Seq('CTTC'), 10], [Seq('CTGA'), 10], [Seq('TCTG'), 11], [Seq('GAAA'), 11], [Seq('CGAA'), 12], [Seq('CATT'), 12], [Seq('TCAT'), 13], [Seq('GCCG'), 13], [Seq('CGCC'), 14], [Seq('ATTG'), 14], [Seq('AATT'), 15], [Seq('TCCt'), 15]]
+False
+final tmp brklist [[33, 117], [117, 204], [204, 291], [291, 381], [381, 468], [468, 555], [555, 642], [642, 729], [729, 816], [816, 900], [900, 987], [987, 1074], [1074, 1161], [1161, 1248], [1248, 1335], [1335, 1422]]
+Creating Gene:SelA --- Fragment:2-29
+Barcodes used:2
+Barcodes Remaining:2998
+Creating Gene:SelA --- Fragment:30-58
+Barcodes used:7
+Barcodes Remaining:2991
+Creating Gene:SelA --- Fragment:59-87
+Barcodes used:1
+Barcodes Remaining:2990
+Creating Gene:SelA --- Fragment:88-117
+Barcodes used:1
+Barcodes Remaining:2989
+Creating Gene:SelA --- Fragment:118-146
+Found non-specfic match at 433bp:
+ match:GGTCATTTTGTCTGCACGCAGAGCGC
+primer:ATAGGTCTCGGGTAACCGGAGAGCGC Tm:27.216449169122825
+Barcodes used:1
+Barcodes Remaining:2988
+Creating Gene:SelA --- Fragment:147-175
+Barcodes used:3
+Barcodes Remaining:2985
+Creating Gene:SelA --- Fragment:176-204
+Found non-specfic match at 119bp:
+ match:ACCGGAACCGGCAGCTCACGCCAACG
+primer:ATAGGTCTCCCGTACCCACGCTAACG Tm:20.580009967783894
+Barcodes used:2
+Barcodes Remaining:2983
+Creating Gene:SelA --- Fragment:205-233
+Barcodes used:4
+Barcodes Remaining:2979
+Creating Gene:SelA --- Fragment:234-262
+Barcodes used:1
+Barcodes Remaining:2978
+Creating Gene:SelA --- Fragment:263-290
+Barcodes used:2
+Barcodes Remaining:2976
+Creating Gene:SelA --- Fragment:291-319
+Found non-specfic match at 349bp:
+ match:GCGGTAGCTCAGGCTATGCGCTCTCCG
+primer:ATAGGTCTCTCTGAAGCGCGCTCTGCG Tm:27.2
+Barcodes used:2
+Barcodes Remaining:2974
+Creating Gene:SelA --- Fragment:320-348
+Found non-specfic match at 288bp:
+ match:AATGAGCAGCCAGCGGtGCtTGCAGaCGC
+primer:ATAGGTCTCGAGGGTGAGACTGCAGACGC Tm:28.68658653986978
+Found non-specfic match at 333bp:
+ match:TAACCTCTGCGGAACGAGTCAGCAGACGC
+primer:ATAGGTCTCGAGGGTGAGACTGCAGACGC Tm:24.619117724841942
+Found non-specfic match at 935bp:
+ match:GCTGCCAGCATCAGCAGGACTGCCGCCGC
+primer:ATAGGTCTCGAGGGTGAGACTGCAGACGC Tm:20.00045914223091
+no thermodynamic data for neighbors 'AC/AC' available. Please check position manually:1176 forward
+Primer:ATAGGTCTCCGAAAAACTGCCGACTCTG
+Match: GTTCGCGGTCCAGGTAATGCCGTGTCTG
+Barcodes used:2
+Barcodes Remaining:2972
+Creating Gene:SelA --- Fragment:349-377
+Barcodes used:2
+Barcodes Remaining:2970
+Creating Gene:SelA --- Fragment:378-406
+Barcodes used:1
+Barcodes Remaining:2969
+Creating Gene:SelA --- Fragment:407-435
+Barcodes used:4
+Barcodes Remaining:2965
+Creating Gene:SelA --- Fragment:436-464
+Found non-specfic match at 1365bp:
+ match:GCAGCAGGCGGTCAATAGCCGGCAGC
+primer:ATAGGTCTCTTACCGGAACCGGCAGC Tm:27.450091188535453
+Barcodes used:2
+Barcodes Remaining:2963
+---------------------------------------------------
+Total count of oligos for single aa replacement:8778
+Total count of oligos for single aa deletion:462
+Total count of oligos for single aa insertion:9260
+---------------------------------------------------
+Total count of oligos library:18500
+---------------------------------------------------
+--------------------------------- Analyzing Gene:SelD ---------------------------------
+Initial fragmentation: [[33, 117], [117, 204], [204, 291], [291, 378], [378, 465], [465, 552], [552, 639], [639, 726], [726, 813], [813, 900], [900, 987], [987, 1074]]
+Overhangs of initial fragmentation: [[Seq('tatg'), 0], [Seq('CTGC'), 0], [Seq('CATT'), 1], [Seq('AATG'), 1], [Seq('GGGT'), 2], [Seq('GCTA'), 2], [Seq('CAAC'), 3], [Seq('ATCG'), 3], [Seq('GGAA'), 4], [Seq('GAGC'), 4], [Seq('ACCG'), 5], [Seq('TTCC'), 5], [Seq('ACTG'), 6], [Seq('GAAG'), 6], [Seq('CACG'), 7], [Seq('CTGC'), 7], [Seq('CGGC'), 8], [Seq('GAGG'), 8], [Seq('TGTG'), 9], [Seq('GAAG'), 9], [Seq('TCGT'), 10], [Seq('ACCG'), 10], [Seq('AGCA'), 11], [Seq('ATCC'), 11]]
+Find repeated / identical overhang in one fragment!
+detectedsites:  {1}
+------------------ Fragment size swapped due to matching overhangs ------------------
+Non specific Fragment:1
+[84, 87, 87, 87, 87, 87, 87, 87, 90, 87, 87, 87]
+New overhangs after fragmentation shift:  [[Seq('tatg'), 0], [Seq('ATTC'), 0], [Seq('CATT'), 1], [Seq('GGTA'), 1], [Seq('GGGT'), 2], [Seq('AACG'), 2], [Seq('CAAC'), 3], [Seq('GAAA'), 3], [Seq('GGAA'), 4], [Seq('CCGG'), 4], [Seq('ACCG'), 5], [Seq('CTGT'), 5], [Seq('ACTG'), 6], [Seq('ACGG'), 6], [Seq('CACG'), 7], [Seq('GGCC'), 7], [Seq('CGGC'), 8], [Seq('GAGG'), 8], [Seq('GGAG'), 9], [Seq('GAAG'), 9], [Seq('TGAA'), 10], [Seq('ACCG'), 10], [Seq('AACC'), 11], [Seq('ATCC'), 11]]
+False
+final tmp brklist [[33, 114], [114, 201], [201, 288], [288, 375], [375, 462], [462, 549], [549, 636], [636, 723], [723, 813], [813, 900], [900, 987], [987, 1074]]
+Creating Gene:SelD --- Fragment:2-28
+no thermodynamic data for neighbors 'AG/CG' available. Please check position manually:607 forward
+Primer:ATAGGTCTCacataTTTAAGGGGCCTGAGCA
+Match: CTGCTGAAACCGGAACACCAGGGCCTGGCCA
+Barcodes used:4
+Barcodes Remaining:2959
+Creating Gene:SelD --- Fragment:29-57
+Barcodes used:4
+Barcodes Remaining:2955
+Creating Gene:SelD --- Fragment:58-86
+Barcodes used:1
+Barcodes Remaining:2954
+Creating Gene:SelD --- Fragment:87-115
+no thermodynamic data for neighbors 'CG/CG' available. Please check position manually:879 forward
+Primer:ATAGGTCTCGGAAATCGCGCGTGAAG
+Match: TCTGATGGGTGAAATGCCTCGTGAAG
+Barcodes used:1
+Barcodes Remaining:2953
+Creating Gene:SelD --- Fragment:116-144
+Barcodes used:1
+Barcodes Remaining:2952
+Creating Gene:SelD --- Fragment:145-173
+Barcodes used:4
+Barcodes Remaining:2948
+Creating Gene:SelD --- Fragment:174-202
+Found non-specfic match at 645bp:
+ match:CATCGATAGAGTGACCACCCGCCAGCGC
+primer:ATAGGTCTCGTTTGCAACCCGCCTGAGC Tm:27.609276118007074
+Barcodes used:1
+Barcodes Remaining:2947
+Creating Gene:SelD --- Fragment:203-231
+no thermodynamic data for neighbors 'TG/CA' available. Please check position manually:756 forward
+Primer:ATAGGTCTCTGGCCAGGCCCTGGTG
+Match: GGGCGCCGGCGTTCAGGCCCGTGTG
+Barcodes used:1
+Barcodes Remaining:2946
+Creating Gene:SelD --- Fragment:232-261
+Barcodes used:1
+Barcodes Remaining:2945
+Creating Gene:SelD --- Fragment:262-290
+Found non-specfic match at 981bp:
+ match:AGTGCAGAATGGTTTCCAGCACTTTCG
+primer:ATAGGTCTCCCACACCCGGCAGTTTCG Tm:20.41335599173749
+Barcodes used:3
+Barcodes Remaining:2942
+Creating Gene:SelD --- Fragment:291-319
+Barcodes used:1
+Barcodes Remaining:2941
+Creating Gene:SelD --- Fragment:320-348
+Barcodes used:1
+Barcodes Remaining:2940
+---------------------------------------------------
+Total count of oligos for single aa replacement:6574
+Total count of oligos for single aa deletion:346
+Total count of oligos for single aa insertion:6940
+---------------------------------------------------
+Total count of oligos library:13860
+---------------------------------------------------
+Running QC for barcode primer specificiy
+Checking primer set:SelA_oligoP_allmut-1
+Checking primer set:SelA_oligoP_allmut-2
+Checking primer set:SelA_oligoP_allmut-3
+Checking primer set:SelA_oligoP_allmut-4
+Checking primer set:SelA_oligoP_allmut-5
+Checking primer set:SelA_oligoP_allmut-6
+Checking primer set:SelA_oligoP_allmut-7
+Checking primer set:SelA_oligoP_allmut-8
+Checking primer set:SelA_oligoP_allmut-9
+Checking primer set:SelA_oligoP_allmut-10
+Checking primer set:SelA_oligoP_allmut-11
+Checking primer set:SelA_oligoP_allmut-12
+Checking primer set:SelA_oligoP_allmut-13
+Checking primer set:SelA_oligoP_allmut-14
+Checking primer set:SelA_oligoP_allmut-15
+Checking primer set:SelA_oligoP_allmut-16
+Checking primer set:SelD_oligoP_allmut-1
+Checking primer set:SelD_oligoP_allmut-2
+Checking primer set:SelD_oligoP_allmut-3
+Checking primer set:SelD_oligoP_allmut-4
+Checking primer set:SelD_oligoP_allmut-5
+Checking primer set:SelD_oligoP_allmut-6
+Checking primer set:SelD_oligoP_allmut-7
+Checking primer set:SelD_oligoP_allmut-8
+Checking primer set:SelD_oligoP_allmut-9
+Checking primer set:SelD_oligoP_allmut-10
+Checking primer set:SelD_oligoP_allmut-11
+Checking primer set:SelD_oligoP_allmut-12
+No non-specific primers detected
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Number of duplicates:835
+Total count of oligos library after deduplicating:31525
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
