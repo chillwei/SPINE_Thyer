@@ -186,7 +186,7 @@ class SPINEgene:
                       'His', 'Arg', 'Trp', 'Val', 'Glu', 'Tyr']
 
         # First check for BsaI sites and BsmBI sites
-        if any([gene.seq.upper().count(cut) for cut in ['CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): # need to add AarI
+        if any([gene.seq.upper().count(cut) for cut in ['GGTCTC', 'GAGACC','CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): # need to add AarI
             raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  # change codon
         if start and end and (end - start) % 3 != 0: # scan ORF and avoid fram shift
             print('Gene length is not divisible by 3')
