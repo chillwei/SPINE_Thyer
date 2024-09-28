@@ -41,19 +41,20 @@ tzdata==2024.1
 	
 	3.  For the benefit of running DMS on multiple sequences in the fasta file,  adjusting the following line in the code of functional module is recommended. Here I take the file 'SPINE_BsaI.py' as an example.
 	
-### Eliminate error report of BsmBI site
+### Eliminate error report of BsmBI and AarI sites detection in template DNA sequence
 
 SPINE_BsaI.py code line 189-190 :
 
-	if any([gene.seq.upper().count(cut) for cut in ['CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): 
+	if any([gene.seq.upper().count(cut) for cut in ['GGTCTC', 'GAGACC','CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): 
 		raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  
 		
-After site removal in line 189-190 :
+After BsmBI and AarI site removal in line 189-190 :
 
-	if any([gene.seq.upper().count(cut) for cut in [ 'CACCTGC', 'GCAGGTG']]): 
+	if any([gene.seq.upper().count(cut) for cut in [ 'GGTCTC', 'GAGACC']): 
 		raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  
 
-Delete SPINE_BsaI.py code line 764-765 :  
+### Delete detection of BsmBI site in generated DMS oligo
+SPINE_BsaI.py code line 803-804 :  
  
 	if (xfrag.upper()[offset:len(tmpseq)+offset].count('CGTCTC') + xfrag.upper()[offset:len(tmpseq)+offset].count('GAGACG')) > 2:
           	raise ValueError('BsmBI site found within insertion fragment')          
