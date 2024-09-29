@@ -1,4 +1,4 @@
- # SPINE: Saturated Programmable INsertion Engineering
+ # SPINE: Saturated Programmable Insertion Engineering
 ### Protein domain insertion via programmed oligo libraries
 Python script for generating oligo libraries and PCR primers for deep mutational scanning (DMS) of gene of interest.
 The mutation type for DMS library can be customized based on the personal needs which include single amino acid replacement, deletion and insertion.
