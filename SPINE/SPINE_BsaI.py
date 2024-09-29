@@ -186,7 +186,7 @@ class SPINEgene:
                       'His', 'Arg', 'Trp', 'Val', 'Glu', 'Tyr']
 
         # First check for BsaI sites and BsmBI sites
-        if any([gene.seq.upper().count(cut) for cut in ['CGTCTC', 'GAGACG', 'CACCTGC', 'GCAGGTG']]): # need to add AarI
+        if any([gene.seq.upper().count(cut) for cut in ['GGTCTC', 'GAGACC','CGTCTC', 'GAGACG', 'CACCTGC','GCAGGTG']]): # need to add AarI
             raise ValueError('Unwanted Restriction cut sites found. Please input plasmids with these removed.')  # change codon
         if start and end and (end - start) % 3 != 0: # scan ORF and avoid fram shift
             print('Gene length is not divisible by 3')
@@ -657,14 +657,14 @@ def switch_fragmentsize(gene, detectedsite, OLS, overlap):
     return skip
 
 
-def check_overhangs(gene, OLS, overlap):
+def check_overhangs(gene, OLS, overlap, tmpbreaklist):
     # Force all overhangs to be different within a gene (no more than 2 matching in a row)
     #print('OLS',OLS)
     if not isinstance(gene, SPINEgene):
         raise TypeError('Not an instance of the SPINEgene class')
     #print(gene.seq)
     # troubleshooting shift of 5' prime overhang
-    tmpbreaklist = [[x[0] - 3, x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
+   
     while True:
         overhang = []
         print('Initial fragmentation:',tmpbreaklist)
@@ -836,12 +836,11 @@ def generate_DMS_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
-            check_overhangs(gene, OLS, overlap)
+            check_overhangs(gene, OLS, overlap,tmpbreaklist)
         
-        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
-        tmpbreaklist[0][0] += 3
         print('final tmp brklist',tmpbreaklist)
         
         # Generate oligos and Primers
@@ -1166,12 +1165,12 @@ def generate_S_INS_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
-            check_overhangs(gene, OLS, overlap)
+            check_overhangs(gene, OLS, overlap,tmpbreaklist)
             
-        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
-        tmpbreaklist[0][0] += 3
+        
         print('final tmp brklist',tmpbreaklist)
         # Generate oligos and Primers
         idx = 0 # index for fragment
@@ -1446,14 +1445,13 @@ def generate_S_DEL_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
-        
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
-            check_overhangs(gene, OLS, overlap)
+            check_overhangs(gene, OLS, overlap,tmpbreaklist)
       
         # Generate oligos and Primers
-        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
-        tmpbreaklist[0][0] += 3
+        
         print('final tmp brklist',tmpbreaklist)
         idx = 0 # index for fragment
         totalcount = 0
@@ -1748,12 +1746,12 @@ def generate_allmut_fragments(OLS, overlap, folder=''):
         print('--------------------------------- Analyzing Gene:' + gene.geneid + ' ---------------------------------')
         gene.breaklist[0][0] += 3  # Do not mutate first codon
         gene.fragsize[0] += -3  # Readjust size to match breaklist
+        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
         if not any([tmp in finishedGenes for tmp in gene.linked]):  # only run analysis for one of the linked genes
             # Quality Control for overhangs from the same gene
-            check_overhangs(gene, OLS, overlap)
+            check_overhangs(gene, OLS, overlap,tmpbreaklist)
             
-        tmpbreaklist = [[x[0]-3 , x[1]] for x in gene.breaklist]  # Shift gene fragments to mutate first codon
-        tmpbreaklist[0][0] += 3
+
         print('final tmp brklist',tmpbreaklist)
         # Generate oligos and Primers
         idx = 0 # index for fragment
